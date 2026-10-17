@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kaiflix",
+  "compatibility_date": "2026-10-17",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kaiflix-db",
+      "database_id": "REPLACE_WITH_DATABASE_ID"
+    }
+  ]
+}
