@@ -1,1 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaiFlix | Movies, Series & Anime</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080b14;color:#fff;font-family:Arial,sans-serif}
+header{padding:20px 5%;background:#111827;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-size:27px;font-weight:bold;color:#42a5ff}
+nav a{color:#ddd;text-decoration:none;margin:0 7px}
+.hero{padding:45px 5%;background:linear-gradient(120deg,#102647,#080b14)}
+.hero h1{font-size:36px;margin:0 0 12px}
+.hero p{color:#c4cede}
+.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:#111827;color:white;font-size:16px}
+main{padding:24px 5%}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 25px}
+.filters button{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
+.filters button.active{background:#1685ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
+.card{background:#111827;border-radius:12px;overflow:hidden;border:1px solid #202b3d}
+.poster{height:205px;background:#1b2940;display:flex;align-items:center;justify-content:center;color:#8da4c4;font-size:14px;text-align:center;padding:10px}
+.poster img{width:100%;height:100%;object-fit:cover}
+.info{padding:12px}
+.info h3{font-size:16px;margin:0 0 8px}
+.info p{font-size:12px;color:#aebbd0}
+.info a{display:block;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:9px;border-radius:7px;margin-top:8px;font-size:13px}
+h2{margin-top:24px}
+footer{text-align:center;padding:25px;color:#8b98ac}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">KaiFlix 🎬</div>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#catalog">Movies</a>
+    <a href="#catalog">Series</a>
+    <a href="#catalog">Anime</a>
+  </nav>
+</header>
 
+<section class="hero" id="home">
+  <h1>Unlimited Stories.<br>One Destination.</h1>
+  <p>Discover Movies, TV Series & Anime.</p>
+  <input class="search" id="search" placeholder="Search your favourite title...">
+</section>
+
+<main id="catalog">
+  <h2>Explore Catalog</h2>
+  <div class="filters">
+    <button class="active" data-cat="All">All</button>
+    <button data-cat="Movie">Movies</button>
+    <button data-cat="TV Series">TV Series</button>
+    <button data-cat="Anime">Anime</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p id="empty" hidden>No titles found. Try another search.</p>
+</main>
+
+<footer>© 2026 KaiFlix · Your entertainment hub</footer>
+
+<script>
+const titles = [
+  {name:"Sample Movie",cat:"Movie",year:"2026",poster:"",watch:"",download:""},
+  {name:"Sample Series",cat:"TV Series",year:"2026",poster:"",watch:"",download:""},
+  {name:"Sample Anime",cat:"Anime",year:"2026",poster:"",watch:"",download:""}
+];
+
+let category="All";
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+
+function render(){
+  const q=search.value.toLowerCase().trim();
+  const items=titles.filter(t=>
+    (category==="All"||t.cat===category)&&
+    t.name.toLowerCase().includes(q)
+  );
+  grid.innerHTML=items.map((t,i)=>`
+    <article class="card">
+      <div class="poster">${
+        t.poster
+        ? `<img src="${t.poster}" alt="Poster">`
+        : "Poster coming soon"
+      }</div>
+      <div class="info">
+        <h3>${t.name}</h3>
+        <p>${t.cat} · ${t.year}</p>
+        <a href="${t.watch||'#'}" target="_blank"
+           rel="noopener">▶ Watch</a>
+        <a href="${t.download||'#'}"
+           target="_blank" rel="noopener">↓ Download</a>
+      </div>
+    </article>`).join("");
+  document.getElementById("empty").hidden=items.length>0;
+}
+
+document.querySelectorAll(".filters button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    category=btn.dataset.cat;
+    document.querySelectorAll(".filters button")
+      .forEach(b=>b.classList.toggle("active",b===btn));
+    render();
+  });
+});
+search.addEventListener("input",render);
+render();
+</script>
+</body>
+  </html>
