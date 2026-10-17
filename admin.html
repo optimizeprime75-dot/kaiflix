@@ -1,146 +1,376 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KaiFlix Admin Panel</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 20px;
-      background: #0b1020;
+      background: #080d18;
       color: #f1f5f9;
       font-family: Arial, sans-serif;
     }
-    main {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 24px;
-      background: #151c30;
-      border-radius: 14px;
+
+    .container {
+      max-width: 760px;
+      margin: auto;
     }
-    h1 { color: #60a5fa; }
+
+    h1 { color: #38bdf8; }
+    h2 { margin-top: 30px; }
+
+    .panel {
+      background: #111827;
+      padding: 18px;
+      border-radius: 14px;
+      margin: 18px 0;
+      border: 1px solid #263449;
+    }
+
     label {
       display: block;
-      margin-top: 16px;
-      font-weight: bold;
+      margin: 14px 0 6px;
+      color: #cbd5e1;
     }
-    input, select {
+
+    input, select, button {
       width: 100%;
-      margin-top: 7px;
       padding: 12px;
-      border: 1px solid #39445d;
-      border-radius: 7px;
-      background: #0b1020;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      font-size: 15px;
+    }
+
+    input, select {
+      background: #080d18;
       color: white;
     }
+
     button {
-      width: 100%;
-      margin-top: 22px;
-      padding: 13px;
-      border: 0;
-      border-radius: 7px;
-      background: #2563eb;
+      margin-top: 16px;
+      background: #0284c7;
       color: white;
-      font-size: 16px;
       font-weight: bold;
+      border: none;
+      cursor: pointer;
     }
-    button:disabled { opacity: .6; }
-    #message { white-space: pre-wrap; margin-top: 16px; }
-    a { color: #93c5fd; }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .title-card {
+      background: #0b1220;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 12px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .title-name {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .meta {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+    }
+
+    .message {
+      margin-top: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .hint {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
   </style>
 </head>
+
 <body>
-<main>
-  <h1>KaiFlix Admin</h1>
-  <p>Add a title to the KaiFlix database.</p>
+  <div class="container">
+    <h1>🎬 KaiFlix Admin Panel</h1>
+    <p class="hint">
+      Add and manage your Movie, TV Series and Anime catalog.
+    </p>
 
-  <form id="titleForm">
-    <label for="password">Admin Password</label>
-    <input id="password" type="password"
-      autocomplete="current-password" required>
+    <section class="panel">
+      <h2>🔐 Admin Login</h2>
+      <label for="password">Admin Password</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Enter your admin password"
+      >
+      <p class="hint">
+        Password is used for admin requests and is not saved by this page.
+      </p>
+    </section>
 
-    <label for="title">Title *</label>
-    <input id="title" required maxlength="200">
+    <section class="panel">
+      <h2>➕ Add New Title</h2>
 
-    <label for="category">Category *</label>
-    <select id="category" required>
-      <option value="Movie">Movie</option>
-      <option value="TV Series">TV Series</option>
-      <option value="Anime">Anime</option>
-    </select>
+      <form id="addForm">
+        <label for="title">Title *</label>
+        <input id="title" required maxlength="200"
+          placeholder="Enter movie or anime name">
 
-    <label for="year">Year</label>
-    <input id="year" type="number" min="1888" max="2100">
+        <label for="category">Category *</label>
+        <select id="category" required>
+          <option value="Movie">Movie</option>
+          <option value="TV Series">TV Series</option>
+          <option value="Anime">Anime</option>
+        </select>
 
-    <label for="poster">Poster URL</label>
-    <input id="poster" type="url" placeholder="https://...">
+        <label for="year">Release Year</label>
+        <input id="year" type="number" min="1888" max="2200"
+          placeholder="e.g. 2026">
 
-    <label for="watch">Watch Link</label>
-    <input id="watch" type="url" placeholder="https://...">
+        <label for="poster">Poster Image URL</label>
+        <input id="poster" type="url"
+          placeholder="https://example.com/poster.jpg">
 
-    <label for="download">Download Link</label>
-    <input id="download" type="url" placeholder="https://...">
+        <label for="watch">Watch URL</label>
+        <input id="watch" type="url"
+          placeholder="https://example.com/watch">
 
-    <button id="saveButton" type="submit">Save to Database</button>
-  </form>
+        <label for="download">Download URL</label>
+        <input id="download" type="url"
+          placeholder="https://example.com/download">
 
-  <p id="message" role="status"></p>
-  <p><a href="/">Open KaiFlix Website</a></p>
-</main>
+        <button id="addButton" type="submit">Add Title</button>
+        <div id="addMessage" class="message" role="status"></div>
+      </form>
+    </section>
 
-<script>
-  const form = document.getElementById("titleForm");
-  const button = document.getElementById("saveButton");
-  const message = document.getElementById("message");
+    <section class="panel">
+      <h2>📚 Manage Catalog</h2>
+      <button id="refreshButton" type="button">
+        🔄 Refresh Titles
+      </button>
+      <div id="listMessage" class="message" role="status"></div>
+      <div id="titleList"></div>
+    </section>
+  </div>
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    button.disabled = true;
-    message.textContent = "Saving...";
+  <script>
+    const passwordInput = document.getElementById("password");
+    const addForm = document.getElementById("addForm");
+    const addButton = document.getElementById("addButton");
+    const addMessage = document.getElementById("addMessage");
+    const listMessage = document.getElementById("listMessage");
+    const titleList = document.getElementById("titleList");
+    const refreshButton = document.getElementById("refreshButton");
 
-    try {
-      const yearValue = document.getElementById("year").value;
-
-      const response = await fetch("/api/titles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Password":
-            document.getElementById("password").value
-        },
-        body: JSON.stringify({
-          title: document.getElementById("title").value.trim(),
-          category: document.getElementById("category").value,
-          year: yearValue ? Number(yearValue) : null,
-          poster_url: document.getElementById("poster").value.trim(),
-          watch_url: document.getElementById("watch").value.trim(),
-          download_url: document.getElementById("download").value.trim()
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Password incorrect or Worker Secret configuration issue.");
-        }
-        throw new Error(result.error || "Could not save the title.");
+    function getPassword() {
+      const password = passwordInput.value;
+      if (!password) {
+        alert("Please enter your Admin Password first.");
+        passwordInput.focus();
+        return null;
       }
-
-      message.textContent =
-        "✅ Saved successfully! Database ID: " + result.id;
-
-      const password = document.getElementById("password").value;
-      form.reset();
-      document.getElementById("password").value = password;
-    } catch (error) {
-      message.textContent = "❌ Error: " + error.message;
-    } finally {
-      button.disabled = false;
+      return password;
     }
-  });
-</script>
+
+    function safeUrl(value) {
+      if (!value) return "";
+      try {
+        const url = new URL(value);
+        return ["https:", "http:"].includes(url.protocol)
+          ? url.href
+          : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function showMessage(element, message, isError = false) {
+      element.textContent = message;
+      element.style.color = isError ? "#f87171" : "#4ade80";
+    }
+
+    async function loadTitles() {
+      listMessage.textContent = "Loading titles...";
+      titleList.replaceChildren();
+      refreshButton.disabled = true;
+
+      try {
+        const response = await fetch("/api/titles");
+        if (!response.ok) {
+          throw new Error("Server returned HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        const titles = Array.isArray(data)
+          ? data
+          : data.titles;
+
+        if (!Array.isArray(titles)) {
+          throw new Error("Unexpected catalog response.");
+        }
+
+        listMessage.textContent = titles.length
+          ? "Total titles: " + titles.length
+          : "No titles have been added yet.";
+
+        for (const item of titles) {
+          const card = document.createElement("div");
+          card.className = "title-card";
+
+          const name = document.createElement("div");
+          name.className = "title-name";
+          name.textContent = item.title || "Untitled";
+          card.appendChild(name);
+
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent =
+            (item.category || "Uncategorized") +
+            (item.year ? " • " + item.year : "") +
+            " • ID: " + item.id;
+          card.appendChild(meta);
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "delete-btn";
+          deleteButton.type = "button";
+          deleteButton.textContent = "🗑️ Delete Title";
+
+          deleteButton.addEventListener("click", async () => {
+            const password = getPassword();
+            if (!password) return;
+
+            const confirmed = confirm(
+              'Delete "' + (item.title || "Untitled") +
+              '" permanently? This cannot be undone.'
+            );
+            if (!confirmed) return;
+
+            deleteButton.disabled = true;
+            deleteButton.textContent = "Deleting...";
+
+            try {
+              const response = await fetch(
+                "/api/titles/" + encodeURIComponent(item.id),
+                {
+                  method: "DELETE",
+                  headers: {
+                    "X-Admin-Password": password
+                  }
+                }
+              );
+
+              const result = await response.json();
+
+              if (!response.ok || !result.success) {
+                throw new Error(
+                  result.error || "Could not delete title."
+                );
+              }
+
+              showMessage(
+                listMessage,
+                "Title deleted successfully."
+              );
+              await loadTitles();
+            } catch (error) {
+              showMessage(
+                listMessage,
+                error.message || "Delete failed.",
+                true
+              );
+              deleteButton.disabled = false;
+              deleteButton.textContent = "🗑️ Delete Title";
+            }
+          });
+
+          card.appendChild(deleteButton);
+          titleList.appendChild(card);
+        }
+      } catch (error) {
+        showMessage(
+          listMessage,
+          "Could not load titles: " + error.message,
+          true
+        );
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
+
+    addForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const password = getPassword();
+      if (!password) return;
+
+      const title = document.getElementById("title").value.trim();
+      const category = document.getElementById("category").value;
+      const year = document.getElementById("year").value.trim();
+      const poster = document.getElementById("poster").value.trim();
+      const watch = document.getElementById("watch").value.trim();
+      const download = document.getElementById("download").value.trim();
+
+      const payload = {
+        title,
+        category,
+        year: year || null,
+        poster_url: poster || null,
+        watch_url: watch || null,
+        download_url: download || null
+      };
+
+      addButton.disabled = true;
+      showMessage(addMessage, "Adding title...");
+
+      try {
+        const response = await fetch("/api/titles", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Password": password
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Could not add title.");
+        }
+
+        showMessage(addMessage, "✅ Title added successfully!");
+        addForm.reset();
+        await loadTitles();
+      } catch (error) {
+        showMessage(
+          addMessage,
+          error.message || "Something went wrong.",
+          true
+        );
+      } finally {
+        addButton.disabled = false;
+      }
+    });
+
+    refreshButton.addEventListener("click", loadTitles);
+
+    loadTitles();
+  </script>
 </body>
 </html>
