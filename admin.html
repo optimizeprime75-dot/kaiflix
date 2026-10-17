@@ -2,375 +2,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KaiFlix Admin Panel</title>
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #080d18;
-      color: #f1f5f9;
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
-      max-width: 760px;
-      margin: auto;
-    }
-
-    h1 { color: #38bdf8; }
-    h2 { margin-top: 30px; }
-
-    .panel {
-      background: #111827;
-      padding: 18px;
-      border-radius: 14px;
-      margin: 18px 0;
-      border: 1px solid #263449;
-    }
-
-    label {
-      display: block;
-      margin: 14px 0 6px;
-      color: #cbd5e1;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      font-size: 15px;
-    }
-
-    input, select {
-      background: #080d18;
-      color: white;
-    }
-
-    button {
-      margin-top: 16px;
-      background: #0284c7;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    .title-card {
-      background: #0b1220;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 14px;
-      margin: 12px 0;
-      overflow-wrap: anywhere;
-    }
-
-    .title-name {
-      font-size: 17px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .meta {
-      color: #94a3b8;
-      font-size: 14px;
-    }
-
-    .delete-btn {
-      background: #dc2626;
-    }
-
-    .message {
-      margin-top: 14px;
-      overflow-wrap: anywhere;
-    }
-
-    .hint {
-      color: #94a3b8;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>KaiFlix Admin Panel</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
+.container{max-width:850px;margin:auto}
+h1{color:#38bdf8;font-size:27px}
+h2{font-size:20px;margin:8px 0 18px}
+.panel{background:#111827;padding:18px;border-radius:14px;margin:18px 0;border:1px solid #263449}
+label{display:block;margin:13px 0 6px;color:#cbd5e1;font-size:14px}
+input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#080d18;color:white;font-size:15px;min-width:0}
+input:focus,select:focus{outline:1px solid #38bdf8}
+button{padding:11px 14px;border:0;border-radius:8px;background:#0284c7;color:white;font-weight:bold;cursor:pointer;font-size:14px}
+button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#263449}
+button.danger{background:#dc2626}
+button.green{background:#15803d}
+button.full{width:100%;margin-top:16px}
+.hint,.meta{color:#94a3b8;font-size:13px;line-height:1.5}
+.message{margin-top:12px;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
+.title-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:13px;background:#0b1220;border:1px solid #334155;border-radius:10px;padding:12px;margin:12px 0}
+.thumb{width:76px;height:112px;object-fit:cover;border-radius:6px;background:#172b48}
+.thumb-fallback{width:76px;height:112px;border-radius:6px;background:#172b48;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;color:#94a3b8;font-size:12px;overflow-wrap:anywhere}
+.title-name{font-size:16px;font-weight:bold;overflow-wrap:anywhere;margin:3px 0 7px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1;min-width:90px}
+#editPanel[hidden]{display:none}
+.preview-wrap{margin-top:12px}
+.poster-preview{width:120px;height:180px;object-fit:cover;background:#172b48;border-radius:8px;border:1px solid #334155;display:block}
+.preview-message{font-size:13px;color:#94a3b8;margin-top:7px;overflow-wrap:anywhere}
+.preview-message.error{color:#f87171}
+.preview-message.ok{color:#4ade80}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.form-actions button{flex:1}
+hr{border:0;border-top:1px solid #263449;margin:22px 0}
+@media(max-width:480px){
+ body{padding:10px}
+ .panel{padding:13px}
+ .title-card{grid-template-columns:65px minmax(0,1fr);gap:10px;padding:10px}
+ .thumb,.thumb-fallback{width:65px;height:98px}
+ .poster-preview{width:100px;height:150px}
+}
+</style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>🎬 KaiFlix Admin Panel</h1>
-    <p class="hint">
-      Add and manage your Movie, TV Series and Anime catalog.
-    </p>
+<div class="container">
+  <h1>🎬 KaiFlix Admin Panel</h1>
+  <p class="hint">Manage your Movies, TV Series and Anime. Admin access required for changes.</p>
 
-    <section class="panel">
-      <h2>🔐 Admin Login</h2>
-      <label for="password">Admin Password</label>
-      <input
-        id="password"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Enter your admin password"
-      >
-      <p class="hint">
-        Password is used for admin requests and is not saved by this page.
-      </p>
-    </section>
+  <section class="panel">
+    <h2>🔐 Admin Login</h2>
+    <label for="password">Admin Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Enter your admin password">
+    <p class="hint">The password is used for protected requests and is not stored by this page.</p>
+  </section>
 
-    <section class="panel">
-      <h2>➕ Add New Title</h2>
+  <section class="panel">
+    <h2>➕ Add New Title</h2>
+    <form id="addForm">
+      <label for="title">Title *</label>
+      <input id="title" required maxlength="200" placeholder="Enter title">
 
-      <form id="addForm">
-        <label for="title">Title *</label>
-        <input id="title" required maxlength="200"
-          placeholder="Enter movie or anime name">
+      <label for="category">Category *</label>
+      <select id="category" required>
+        <option value="Movie">Movie</option>
+        <option value="TV Series">TV Series</option>
+        <option value="Anime">Anime</option>
+      </select>
 
-        <label for="category">Category *</label>
-        <select id="category" required>
-          <option value="Movie">Movie</option>
-          <option value="TV Series">TV Series</option>
-          <option value="Anime">Anime</option>
-        </select>
+      <label for="year">Release Year</label>
+      <input id="year" type="number" min="1888" max="2200" placeholder="e.g. 2026">
 
-        <label for="year">Release Year</label>
-        <input id="year" type="number" min="1888" max="2200"
-          placeholder="e.g. 2026">
+      <label for="poster">Poster Image URL</label>
+      <input id="poster" type="url" placeholder="https://image.tmdb.org/t/p/w500/example.jpg">
+      <div class="preview-wrap">
+        <img id="addPreview" class="poster-preview" alt="Poster preview" hidden>
+        <div id="addPreviewMessage" class="preview-message">Enter a direct image URL to preview the poster.</div>
+      </div>
 
-        <label for="poster">Poster Image URL</label>
-        <input id="poster" type="url"
-          placeholder="https://example.com/poster.jpg">
+      <label for="watch">Watch URL</label>
+      <input id="watch" type="url" placeholder="https://example.com/watch">
 
-        <label for="watch">Watch URL</label>
-        <input id="watch" type="url"
-          placeholder="https://example.com/watch">
+      <label for="download">Download URL</label>
+      <input id="download" type="url" placeholder="https://example.com/download">
 
-        <label for="download">Download URL</label>
-        <input id="download" type="url"
-          placeholder="https://example.com/download">
+      <button id="addButton" class="full" type="submit">Add Title</button>
+      <div id="addMessage" class="message" role="status"></div>
+    </form>
+  </section>
 
-        <button id="addButton" type="submit">Add Title</button>
-        <div id="addMessage" class="message" role="status"></div>
-      </form>
-    </section>
+  <section class="panel">
+    <h2>📚 Manage Catalog</h2>
+    <label for="catalogSearch">🔎 Search titles</label>
+    <input id="catalogSearch" type="search" placeholder="Type a movie, series or anime name...">
+    <button id="refreshButton" class="secondary full" type="button">🔄 Refresh Titles</button>
+    <div id="listMessage" class="message" role="status">Loading titles...</div>
+    <div id="titleList"></div>
+  </section>
 
-    <section class="panel">
-      <h2>📚 Manage Catalog</h2>
-      <button id="refreshButton" type="button">
-        🔄 Refresh Titles
-      </button>
-      <div id="listMessage" class="message" role="status"></div>
-      <div id="titleList"></div>
-    </section>
-  </div>
+  <section class="panel" id="editPanel" hidden>
+    <h2>✏️ Edit Title</h2>
+    <p class="hint" id="editId"></p>
 
-  <script>
-    const passwordInput = document.getElementById("password");
-    const addForm = document.getElementById("addForm");
-    const addButton = document.getElementById("addButton");
-    const addMessage = document.getElementById("addMessage");
-    const listMessage = document.getElementById("listMessage");
-    const titleList = document.getElementById("titleList");
-    const refreshButton = document.getElementById("refreshButton");
+    <form id="editForm">
+      <label for="editTitle">Title *</label>
+      <input id="editTitle" required maxlength="200">
 
-    function getPassword() {
-      const password = passwordInput.value;
-      if (!password) {
-        alert("Please enter your Admin Password first.");
-        passwordInput.focus();
-        return null;
-      }
-      return password;
+      <label for="editCategory">Category *</label>
+      <select id="editCategory" required>
+        <option value="Movie">Movie</option>
+        <option value="TV Series">TV Series</option>
+        <option value="Anime">Anime</option>
+      </select>
+
+      <label for="editYear">Release Year</label>
+      <input id="editYear" type="number" min="1888" max="2200" placeholder="e.g. 2026">
+
+      <label for="editPoster">Poster Image URL</label>
+      <input id="editPoster" type="url" placeholder="https://example.com/poster.jpg">
+      <div class="preview-wrap">
+        <img id="editPreview" class="poster-preview" alt="Edited poster preview" hidden>
+        <div id="editPreviewMessage" class="preview-message">Enter a direct image URL to preview the poster.</div>
+      </div>
+
+      <label for="editWatch">Watch URL</label>
+      <input id="editWatch" type="url" placeholder="https://example.com/watch">
+
+      <label for="editDownload">Download URL</label>
+      <input id="editDownload" type="url" placeholder="https://example.com/download">
+
+      <div class="form-actions">
+        <button id="saveEditButton" type="submit">💾 Save Changes</button>
+        <button id="cancelEditButton" class="secondary" type="button">Cancel</button>
+      </div>
+      <div id="editMessage" class="message" role="status"></div>
+    </form>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const passwordInput=$("password");
+const addForm=$("addForm");
+const editForm=$("editForm");
+const addMessage=$("addMessage");
+const editMessage=$("editMessage");
+const listMessage=$("listMessage");
+const titleList=$("titleList");
+const searchInput=$("catalogSearch");
+const refreshButton=$("refreshButton");
+const editPanel=$("editPanel");
+
+let titles=[];
+let editingId=null;
+
+function getPassword(){
+  const password=passwordInput.value;
+  if(!password){
+    alert("Enter your Admin Password first.");
+    passwordInput.focus();
+    return null;
+  }
+  return password;
+}
+
+function showMessage(el,message,type="ok"){
+  el.textContent=message;
+  el.style.color=type==="error"?"#f87171":type==="info"?"#94a3b8":"#4ade80";
+}
+
+function safeUrl(value){
+  if(!value)return "";
+  try{
+    const u=new URL(value);
+    return ["http:","https:"].includes(u.protocol)?u.href:"";
+  }catch{return "";}
+}
+
+function setupPreview(inputId,imgId,messageId){
+  const input=$(inputId);
+  const img=$(imgId);
+  const message=$(messageId);
+  let requestNumber=0;
+
+  function update(){
+    const current=++requestNumber;
+    const url=safeUrl(input.value.trim());
+
+    img.hidden=true;
+    img.removeAttribute("src");
+    message.className="preview-message";
+
+    if(!input.value.trim()){
+      message.textContent="Enter a direct image URL to preview the poster.";
+      return;
     }
 
-    function safeUrl(value) {
-      if (!value) return "";
-      try {
-        const url = new URL(value);
-        return ["https:", "http:"].includes(url.protocol)
-          ? url.href
-          : "";
-      } catch {
-        return "";
-      }
+    if(!url){
+      message.textContent="Invalid URL. Use a valid HTTP or HTTPS image URL.";
+      message.classList.add("error");
+      return;
     }
 
-    function showMessage(element, message, isError = false) {
-      element.textContent = message;
-      element.style.color = isError ? "#f87171" : "#4ade80";
+    message.textContent="Loading poster preview...";
+
+    img.onload=()=>{
+      if(current!==requestNumber)return;
+      img.hidden=false;
+      message.textContent="✅ Poster loaded successfully.";
+      message.classList.add("ok");
+    };
+
+    img.onerror=()=>{
+      if(current!==requestNumber)return;
+      img.hidden=true;
+      message.textContent="❌ Image could not load. Check that this is a direct image URL.";
+      message.classList.add("error");
+    };
+
+    img.src=url;
+  }
+
+  input.addEventListener("input",update);
+  return update;
+}
+
+const updateAddPreview=setupPreview("poster","addPreview","addPreviewMessage");
+const updateEditPreview=setupPreview("editPoster","editPreview","editPreviewMessage");
+
+function createPoster(url,title){
+  const safe=safeUrl(url);
+  if(!safe){
+    const fallback=document.createElement("div");
+    fallback.className="thumb-fallback";
+    fallback.textContent="🎬 No poster";
+    return fallback;
+  }
+
+  const img=document.createElement("img");
+  img.className="thumb";
+  img.alt=(title||"Title")+" poster";
+  img.loading="lazy";
+  img.src=safe;
+
+  img.onerror=()=>{
+    const fallback=document.createElement("div");
+    fallback.className="thumb-fallback";
+    fallback.textContent="🎬 Poster unavailable";
+    img.replaceWith(fallback);
+  };
+
+  return img;
+}
+
+async function apiRequest(path,options={}){
+  const response=await fetch(path,{
+    ...options,
+    headers:{
+      ...(options.body?{"Content-Type":"application/json"}:{}),
+      ...(options.headers||{})
     }
+  });
 
-    async function loadTitles() {
-      listMessage.textContent = "Loading titles...";
-      titleList.replaceChildren();
-      refreshButton.disabled = true;
+  let result;
+  try{result=await response.json();}
+  catch{throw new Error("Server returned an invalid response.");}
 
-      try {
-        const response = await fetch("/api/titles");
-        if (!response.ok) {
-          throw new Error("Server returned HTTP " + response.status);
-        }
+  if(!response.ok||result.success===false){
+    throw new Error(result.error||"Request failed (HTTP "+response.status+")");
+  }
 
-        const data = await response.json();
-        const titles = Array.isArray(data)
-          ? data
-          : data.titles;
+  return result;
+}
 
-        if (!Array.isArray(titles)) {
-          throw new Error("Unexpected catalog response.");
-        }
+function openEdit(item){
+  editingId=item.id;
+  $("editId").textContent="Database ID: "+item.id;
+  $("editTitle").value=item.title||"";
+  $("editCategory").value=item.category||"Movie";
+  $("editYear").value=item.year||"";
+  $("editPoster").value=item.poster_url||"";
+  $("editWatch").value=item.watch_url||"";
+  $("editDownload").value=item.download_url||"";
+  showMessage(editMessage,"","info");
+  editPanel.hidden=false;
 
-        listMessage.textContent = titles.length
-          ? "Total titles: " + titles.length
-          : "No titles have been added yet.";
+  if(item.poster_url)updateEditPreview();
+  else{
+    $("editPreview").hidden=true;
+    $("editPreviewMessage").textContent="Enter a direct image URL to preview the poster.";
+  }
 
-        for (const item of titles) {
-          const card = document.createElement("div");
-          card.className = "title-card";
+  editPanel.scrollIntoView({behavior:"smooth",block:"start"});
+}
 
-          const name = document.createElement("div");
-          name.className = "title-name";
-          name.textContent = item.title || "Untitled";
-          card.appendChild(name);
+function renderTitles(){
+  const query=searchInput.value.toLowerCase().trim();
+  const filtered=titles.filter(item=>
+    String(item.title||"").toLowerCase().includes(query)||
+    String(item.category||"").toLowerCase().includes(query)||
+    String(item.year||"").includes(query)
+  );
 
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          meta.textContent =
-            (item.category || "Uncategorized") +
-            (item.year ? " • " + item.year : "") +
-            " • ID: " + item.id;
-          card.appendChild(meta);
+  titleList.replaceChildren();
 
-          const deleteButton = document.createElement("button");
-          deleteButton.className = "delete-btn";
-          deleteButton.type = "button";
-          deleteButton.textContent = "🗑️ Delete Title";
-
-          deleteButton.addEventListener("click", async () => {
-            const password = getPassword();
-            if (!password) return;
-
-            const confirmed = confirm(
-              'Delete "' + (item.title || "Untitled") +
-              '" permanently? This cannot be undone.'
-            );
-            if (!confirmed) return;
-
-            deleteButton.disabled = true;
-            deleteButton.textContent = "Deleting...";
-
-            try {
-              const response = await fetch(
-                "/api/titles/" + encodeURIComponent(item.id),
-                {
-                  method: "DELETE",
-                  headers: {
-                    "X-Admin-Password": password
-                  }
-                }
-              );
-
-              const result = await response.json();
-
-              if (!response.ok || !result.success) {
-                throw new Error(
-                  result.error || "Could not delete title."
-                );
-              }
-
-              showMessage(
-                listMessage,
-                "Title deleted successfully."
-              );
-              await loadTitles();
-            } catch (error) {
-              showMessage(
-                listMessage,
-                error.message || "Delete failed.",
-                true
-              );
-              deleteButton.disabled = false;
-              deleteButton.textContent = "🗑️ Delete Title";
-            }
-          });
-
-          card.appendChild(deleteButton);
-          titleList.appendChild(card);
-        }
-      } catch (error) {
-        showMessage(
-          listMessage,
-          "Could not load titles: " + error.message,
-          true
-        );
-      } finally {
-        refreshButton.disabled = false;
-      }
+  if(!filtered.length){
+    if(titles.length){
+      const p=document.createElement("p");
+      p.className="hint";
+      p.textContent="No matching titles found.";
+      titleList.appendChild(p);
     }
+    return;
+  }
 
-    addForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
+  for(const item of filtered){
+    const card=document.createElement("article");
+    card.className="title-card";
+    card.appendChild(createPoster(item.poster_url,item.title));
 
-      const password = getPassword();
-      if (!password) return;
+    const content=document.createElement("div");
+    const name=document.createElement("div");
+    name.className="title-name";
+    name.textContent=item.title||"Untitled";
 
-      const title = document.getElementById("title").value.trim();
-      const category = document.getElementById("category").value;
-      const year = document.getElementById("year").value.trim();
-      const poster = document.getElementById("poster").value.trim();
-      const watch = document.getElementById("watch").value.trim();
-      const download = document.getElementById("download").value.trim();
+    const meta=document.createElement("div");
+    meta.className="meta";
+    meta.textContent=(item.category||"Uncategorized")+
+      (item.year?" • "+item.year:"")+" • ID: "+item.id;
 
-      const payload = {
-        title,
-        category,
-        year: year || null,
-        poster_url: poster || null,
-        watch_url: watch || null,
-        download_url: download || null
-      };
+    content.append(name,meta);
 
-      addButton.disabled = true;
-      showMessage(addMessage, "Adding title...");
+    const actions=document.createElement("div");
+    actions.className="actions";
 
-      try {
-        const response = await fetch("/api/titles", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Admin-Password": password
-          },
-          body: JSON.stringify(payload)
+    const editButton=document.createElement("button");
+    editButton.type="button";
+    editButton.textContent="✏️ Edit";
+    editButton.addEventListener("click",()=>{
+      if(!getPassword())return;
+      openEdit(item);
+    });
+
+    const deleteButton=document.createElement("button");
+    deleteButton.type="button";
+    deleteButton.className="danger";
+    deleteButton.textContent="🗑️ Delete";
+    deleteButton.addEventListener("click",async()=>{
+      const password=getPassword();
+      if(!password)return;
+
+      if(!confirm('Permanently delete "'+(item.title||"Untitled")+'"? This cannot be undone.'))return;
+
+      deleteButton.disabled=true;
+      deleteButton.textContent="Deleting...";
+
+      try{
+        await apiRequest("/api/titles/"+encodeURIComponent(item.id),{
+          method:"DELETE",
+          headers:{"X-Admin-Password":password}
         });
 
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || "Could not add title.");
+        if(editingId===item.id){
+          editingId=null;
+          editPanel.hidden=true;
         }
 
-        showMessage(addMessage, "✅ Title added successfully!");
-        addForm.reset();
+        showMessage(listMessage,"✅ Title deleted successfully.");
         await loadTitles();
-      } catch (error) {
-        showMessage(
-          addMessage,
-          error.message || "Something went wrong.",
-          true
-        );
-      } finally {
-        addButton.disabled = false;
+      }catch(error){
+        showMessage(listMessage,error.message,true);
+        deleteButton.disabled=false;
+        deleteButton.textContent="🗑️ Delete";
       }
     });
 
-    refreshButton.addEventListener("click", loadTitles);
+    actions.append(editButton,deleteButton);
+    content.appendChild(actions);
+    card.appendChild(content);
+    titleList.appendChild(card);
+  }
+}
 
-    loadTitles();
-  </script>
+async function loadTitles(){
+  refreshButton.disabled=true;
+  showMessage(listMessage,"Loading titles...","info");
+
+  try{
+    const data=await apiRequest("/api/titles");
+    titles=Array.isArray(data)?data:Array.isArray(data.titles)?data.titles:[];
+
+    showMessage(listMessage,"Total titles: "+titles.length,"info");
+    renderTitles();
+  }catch(error){
+    showMessage(listMessage,"Could not load titles: "+error.message,"error");
+  }finally{
+    refreshButton.disabled=false;
+  }
+}
+
+addForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const password=getPassword();
+  if(!password)return;
+
+  const payload={
+    title:$("title").value.trim(),
+    category:$("category").value,
+    year:$("year").value||null,
+    poster_url:$("poster").value.trim()||null,
+    watch_url:$("watch").value.trim()||null,
+    download_url:$("download").value.trim()||null
+  };
+
+  const button=$("addButton");
+  button.disabled=true;
+  showMessage(addMessage,"Adding title...","info");
+
+  try{
+    await apiRequest("/api/titles",{
+      method:"POST",
+      headers:{"X-Admin-Password":password},
+      body:JSON.stringify(payload)
+    });
+
+    addForm.reset();
+    $("addPreview").hidden=true;
+    $("addPreview").removeAttribute("src");
+    $("addPreviewMessage").textContent="Enter a direct image URL to preview the poster.";
+    showMessage(addMessage,"✅ Title added successfully.");
+    await loadTitles();
+  }catch(error){
+    showMessage(addMessage,error.message,"error");
+  }finally{
+    button.disabled=false;
+  }
+});
+
+editForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+
+  if(editingId===null){
+    showMessage(editMessage,"Select a title to edit.","error");
+    return;
+  }
+
+  const password=getPassword();
+  if(!password)return;
+
+  const payload={
+    title:$("editTitle").value.trim(),
+    category:$("editCategory").value,
+    year:$("editYear").value||null,
+    poster_url:$("editPoster").value.trim()||null,
+    watch_url:$("editWatch").value.trim()||null,
+    download_url:$("editDownload").value.trim()||null
+  };
+
+  const button=$("saveEditButton");
+  button.disabled=true;
+  showMessage(editMessage,"Saving changes...","info");
+
+  try{
+    await apiRequest("/api/titles/"+encodeURIComponent(editingId),{
+      method:"PUT",
+      headers:{"X-Admin-Password":password},
+      body:JSON.stringify(payload)
+    });
+
+    showMessage(editMessage,"✅ Changes saved successfully.");
+    await loadTitles();
+    const updated=titles.find(item=>String(item.id)===String(editingId));
+    if(updated)openEdit(updated);
+  }catch(error){
+    showMessage(editMessage,error.message,"error");
+  }finally{
+    button.disabled=false;
+  }
+});
+
+$("cancelEditButton").addEventListener("click",()=>{
+  editingId=null;
+  editPanel.hidden=true;
+});
+
+searchInput.addEventListener("input",renderTitles);
+refreshButton.addEventListener("click",loadTitles);
+
+loadTitles();
+</script>
 </body>
 </html>
