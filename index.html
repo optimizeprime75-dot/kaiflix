@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,14 +20,16 @@ main{padding:24px 5%}
 .filters button.active{background:#1685ff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
 .card{background:#111827;border-radius:12px;overflow:hidden;border:1px solid #202b3d}
-.poster{height:205px;background:#1b2940;display:flex;align-items:center;justify-content:center;color:#8da4c4;font-size:14px;text-align:center;padding:10px}
+.poster{height:205px;background:#1b2940;display:flex;align-items:center;justify-content:center;color:#8da4c4;font-size:14px;text-align:center;overflow:hidden}
 .poster img{width:100%;height:100%;object-fit:cover}
 .info{padding:12px}
-.info h3{font-size:16px;margin:0 0 8px}
+.info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere}
 .info p{font-size:12px;color:#aebbd0}
 .info a{display:block;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:9px;border-radius:7px;margin-top:8px;font-size:13px}
+.info a.download{background:#26364e}
 h2{margin-top:24px}
 footer{text-align:center;padding:25px;color:#8b98ac}
+#status{color:#aebbd0;font-size:14px}
 </style>
 </head>
 <body>
@@ -56,6 +57,7 @@ footer{text-align:center;padding:25px;color:#8b98ac}
     <button data-cat="TV Series">TV Series</button>
     <button data-cat="Anime">Anime</button>
   </div>
+  <p id="status">Loading catalog...</p>
   <div class="grid" id="grid"></div>
   <p id="empty" hidden>No titles found. Try another search.</p>
 </main>
@@ -63,39 +65,84 @@ footer{text-align:center;padding:25px;color:#8b98ac}
 <footer>© 2026 KaiFlix · Your entertainment hub</footer>
 
 <script>
-const titles = [
-  {name:"Sample Movie",cat:"Movie",year:"2026",poster:"",watch:"",download:""},
-  {name:"Sample Series",cat:"TV Series",year:"2026",poster:"",watch:"",download:""},
-  {name:"Sample Anime",cat:"Anime",year:"2026",poster:"",watch:"",download:""}
-];
-
+let titles=[];
 let category="All";
+
 const grid=document.getElementById("grid");
 const search=document.getElementById("search");
+const status=document.getElementById("status");
+const empty=document.getElementById("empty");
+
+function safeUrl(value){
+  if(!value) return "";
+  try{
+    const u=new URL(value);
+    return ["http:","https:"].includes(u.protocol)?u.href:"";
+  }catch{
+    return "";
+  }
+}
 
 function render(){
   const q=search.value.toLowerCase().trim();
   const items=titles.filter(t=>
-    (category==="All"||t.cat===category)&&
-    t.name.toLowerCase().includes(q)
+    (category==="All"||t.category===category)&&
+    String(t.title||"").toLowerCase().includes(q)
   );
-  grid.innerHTML=items.map((t,i)=>`
-    <article class="card">
-      <div class="poster">${
-        t.poster
-        ? `<img src="${t.poster}" alt="Poster">`
-        : "Poster coming soon"
-      }</div>
-      <div class="info">
-        <h3>${t.name}</h3>
-        <p>${t.cat} · ${t.year}</p>
-        <a href="${t.watch||'#'}" target="_blank"
-           rel="noopener">▶ Watch</a>
-        <a href="${t.download||'#'}"
-           target="_blank" rel="noopener">↓ Download</a>
-      </div>
-    </article>`).join("");
-  document.getElementById("empty").hidden=items.length>0;
+
+  grid.innerHTML=items.map(t=>{
+    const poster=safeUrl(t.poster_url);
+    const watch=safeUrl(t.watch_url);
+    const download=safeUrl(t.download_url);
+
+    return `
+      <article class="card">
+        <div class="poster">
+          ${poster
+            ? `<img src="${poster}" alt="${escapeHtml(t.title)} poster" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='Poster unavailable'">`
+            : "Poster coming soon"}
+        </div>
+        <div class="info">
+          <h3>${escapeHtml(t.title||"Untitled")}</h3>
+          <p>${escapeHtml(t.category||"")} · ${escapeHtml(t.year||"")}</p>
+          ${watch
+            ? `<a href="${watch}" target="_blank" rel="noopener noreferrer">▶ Watch</a>`
+            : ""}
+          ${download
+            ? `<a class="download" href="${download}" target="_blank" rel="noopener noreferrer">↓ Download</a>`
+            : ""}
+        </div>
+      </article>`;
+  }).join("");
+
+  empty.hidden=items.length>0;
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+async function loadTitles(){
+  try{
+    const response=await fetch("/api/titles");
+    if(!response.ok) throw new Error("API returned "+response.status);
+
+    const data=await response.json();
+    titles=Array.isArray(data)?data:
+      Array.isArray(data.titles)?data.titles:[];
+
+    status.textContent=titles.length
+      ? `${titles.length} title(s) loaded`
+      : "No titles in the catalog yet.";
+
+    render();
+  }catch(error){
+    status.textContent="Could not load catalog. Please try again later.";
+    console.error("KaiFlix catalog error:",error);
+  }
 }
 
 document.querySelectorAll(".filters button").forEach(btn=>{
@@ -106,9 +153,10 @@ document.querySelectorAll(".filters button").forEach(btn=>{
     render();
   });
 });
+
 search.addEventListener("input",render);
-render();
+loadTitles();
 </script>
 </body>
-</html>
+  </html>
 
