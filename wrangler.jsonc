@@ -1,8 +1,7 @@
-
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kaiflix",
-  "main": "worker.js",
+  "main": "./worker.js",
   "compatibility_date": "2026-10-17",
   "assets": {
     "directory": "./",
@@ -16,4 +15,3 @@
     }
   ]
 }
-
