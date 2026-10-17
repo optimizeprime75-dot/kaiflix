@@ -27,15 +27,19 @@ export default {
     }
 
     if (url.pathname === "/api/titles" && request.method === "POST") {
-      if (
-        !env.ADMIN_PASSWORD ||
-        request.headers.get("X-Admin-Password") !== env.ADMIN_PASSWORD
-      ) {
-        return Response.json(
-          { error: "Unauthorized" },
-          { status: 401, headers: corsHeaders }
-        );
-      }
+      const savedPassword = env.ADMIN_PASSWORD;
+const enteredPassword = request.headers.get("X-Admin-Password");
+
+if (!savedPassword || enteredPassword !== savedPassword) {
+  return Response.json(
+    {
+      error: !savedPassword
+        ? "ADMIN_PASSWORD secret missing in live Worker"
+        : "Password does not match live Worker secret"
+    },
+    { status: 401, headers: corsHeaders }
+  );
+}
 
       try {
         const data = await request.json();
