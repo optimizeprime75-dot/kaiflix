@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,14 +26,20 @@ main{padding:24px 5%}
 .info{padding:12px}
 .info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere}
 .info p{font-size:12px;color:#aebbd0}
-.info a{display:block;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:9px;border-radius:7px;margin-top:8px;font-size:13px}
+.info a,.watch-button{display:block;width:100%;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px;cursor:pointer}
 .info a.download{background:#26364e}
+#playerSection{display:none;margin:20px 0;padding:16px;background:#111827;border:1px solid #263449;border-radius:12px}
+#playerSection h2{margin-top:0}
+#videoFrame{width:100%;aspect-ratio:16/9;border:0;background:#000;border-radius:8px}
+#closePlayer{background:#dc2626;color:white;border:0;border-radius:7px;padding:11px 16px;margin-bottom:12px;cursor:pointer}
+#playerMessage{color:#aebbd0;font-size:13px;line-height:1.5}
 h2{margin-top:24px}
 footer{text-align:center;padding:25px;color:#8b98ac}
 #status{color:#aebbd0;font-size:14px}
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo">KaiFlix 🎬</div>
   <nav>
@@ -51,12 +58,29 @@ footer{text-align:center;padding:25px;color:#8b98ac}
 
 <main id="catalog">
   <h2>Explore Catalog</h2>
+
+  <div id="playerSection">
+    <button id="closePlayer" type="button">✕ Close Player</button>
+    <h2 id="playerTitle">Now Playing</h2>
+    <iframe
+      id="videoFrame"
+      title="KaiFlix Video Player"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin">
+    </iframe>
+    <p id="playerMessage">
+      If the video does not play, check its sharing permissions.
+    </p>
+  </div>
+
   <div class="filters">
     <button class="active" data-cat="All">All</button>
     <button data-cat="Movie">Movies</button>
     <button data-cat="TV Series">TV Series</button>
     <button data-cat="Anime">Anime</button>
   </div>
+
   <p id="status">Loading catalog...</p>
   <div class="grid" id="grid"></div>
   <p id="empty" hidden>No titles found. Try another search.</p>
@@ -72,6 +96,10 @@ const grid=document.getElementById("grid");
 const search=document.getElementById("search");
 const status=document.getElementById("status");
 const empty=document.getElementById("empty");
+const playerSection=document.getElementById("playerSection");
+const videoFrame=document.getElementById("videoFrame");
+const playerTitle=document.getElementById("playerTitle");
+const playerMessage=document.getElementById("playerMessage");
 
 function safeUrl(value){
   if(!value) return "";
@@ -83,46 +111,140 @@ function safeUrl(value){
   }
 }
 
-function render(){
-  const q=search.value.toLowerCase().trim();
-  const items=titles.filter(t=>
-    (category==="All"||t.category===category)&&
-    String(t.title||"").toLowerCase().includes(q)
-  );
-
-  grid.innerHTML=items.map(t=>{
-    const poster=safeUrl(t.poster_url);
-    const watch=safeUrl(t.watch_url);
-    const download=safeUrl(t.download_url);
-
-    return `
-      <article class="card">
-        <div class="poster">
-          ${poster
-            ? `<img src="${poster}" alt="${escapeHtml(t.title)} poster" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='Poster unavailable'">`
-            : "Poster coming soon"}
-        </div>
-        <div class="info">
-          <h3>${escapeHtml(t.title||"Untitled")}</h3>
-          <p>${escapeHtml(t.category||"")} · ${escapeHtml(t.year||"")}</p>
-          ${watch
-            ? `<a href="${watch}" target="_blank" rel="noopener noreferrer">▶ Watch</a>`
-            : ""}
-          ${download
-            ? `<a class="download" href="${download}" target="_blank" rel="noopener noreferrer">↓ Download</a>`
-            : ""}
-        </div>
-      </article>`;
-  }).join("");
-
-  empty.hidden=items.length>0;
-}
-
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g,c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",
     '"':"&quot;","'":"&#39;"
   }[c]));
+}
+
+function getEmbedUrl(value){
+  const safe=safeUrl(value);
+  if(!safe) return "";
+
+  try{
+    const u=new URL(safe);
+
+    // Convert a Google Drive file share URL to its preview player.
+    if(u.hostname==="drive.google.com"){
+      const match=u.pathname.match(/^\/file\/d\/([^/]+)/);
+
+      if(match){
+        return "https://drive.google.com/file/d/"+
+          encodeURIComponent(match[1])+"/preview";
+      }
+
+      // Keep already valid Drive preview links.
+      if(/^\/file\/d\/[^/]+\/preview$/.test(u.pathname)){
+        return u.href;
+      }
+    }
+
+    // Google Drive URLs from docs.google.com are not converted.
+    return safe;
+  }catch{
+    return "";
+  }
+}
+
+function openPlayer(title,url){
+  const embed=getEmbedUrl(url);
+
+  if(!embed){
+    alert("This title does not have a valid Watch URL.");
+    return;
+  }
+
+  playerTitle.textContent=title||"Now Playing";
+  playerMessage.textContent=
+    "If playback fails, confirm that the video is shared with anyone who has the link.";
+
+  videoFrame.src=embed;
+  playerSection.style.display="block";
+  playerSection.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function closePlayer(){
+  videoFrame.src="about:blank";
+  playerSection.style.display="none";
+}
+
+document.getElementById("closePlayer").addEventListener("click",closePlayer);
+
+function render(){
+  const q=search.value.toLowerCase().trim();
+
+  const items=titles.filter(t=>
+    (category==="All"||t.category===category)&&
+    String(t.title||"").toLowerCase().includes(q)
+  );
+
+  grid.replaceChildren();
+
+  for(const t of items){
+    const card=document.createElement("article");
+    card.className="card";
+
+    const posterBox=document.createElement("div");
+    posterBox.className="poster";
+
+    const poster=safeUrl(t.poster_url);
+
+    if(poster){
+      const img=document.createElement("img");
+      img.src=poster;
+      img.alt=(t.title||"Title")+" poster";
+      img.loading="lazy";
+      img.onerror=()=>{
+        img.remove();
+        posterBox.textContent="Poster unavailable";
+      };
+      posterBox.appendChild(img);
+    }else{
+      posterBox.textContent="Poster coming soon";
+    }
+
+    const info=document.createElement("div");
+    info.className="info";
+
+    const title=document.createElement("h3");
+    title.textContent=t.title||"Untitled";
+    info.appendChild(title);
+
+    const meta=document.createElement("p");
+    meta.textContent=(t.category||"")+" · "+(t.year||"");
+    info.appendChild(meta);
+
+    const watch=safeUrl(t.watch_url);
+
+    if(watch){
+      const watchButton=document.createElement("button");
+      watchButton.type="button";
+      watchButton.className="watch-button";
+      watchButton.textContent="▶ Watch";
+      watchButton.addEventListener("click",()=>{
+        openPlayer(t.title,watch);
+      });
+      info.appendChild(watchButton);
+    }
+
+    const download=safeUrl(t.download_url);
+
+    if(download){
+      const downloadLink=document.createElement("a");
+      downloadLink.className="download";
+      downloadLink.href=download;
+      downloadLink.target="_blank";
+      downloadLink.rel="noopener noreferrer";
+      downloadLink.textContent="↓ Download";
+      info.appendChild(downloadLink);
+    }
+
+    card.append(posterBox,info);
+    grid.appendChild(card);
+  }
+
+  empty.hidden=items.length>0;
 }
 
 async function loadTitles(){
@@ -131,11 +253,12 @@ async function loadTitles(){
     if(!response.ok) throw new Error("API returned "+response.status);
 
     const data=await response.json();
+
     titles=Array.isArray(data)?data:
       Array.isArray(data.titles)?data.titles:[];
 
     status.textContent=titles.length
-      ? `${titles.length} title(s) loaded`
+      ? titles.length+" title(s) loaded"
       : "No titles in the catalog yet.";
 
     render();
@@ -148,8 +271,10 @@ async function loadTitles(){
 document.querySelectorAll(".filters button").forEach(btn=>{
   btn.addEventListener("click",()=>{
     category=btn.dataset.cat;
+
     document.querySelectorAll(".filters button")
       .forEach(b=>b.classList.toggle("active",b===btn));
+
     render();
   });
 });
@@ -158,5 +283,4 @@ search.addEventListener("input",render);
 loadTitles();
 </script>
 </body>
-  </html>
-
+</html>
