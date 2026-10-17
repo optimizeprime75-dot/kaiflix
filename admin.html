@@ -2,48 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KaiFlix Admin Panel</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 24px 16px;
+      padding: 20px;
       background: #0b1020;
-      color: #fff;
+      color: #f1f5f9;
       font-family: Arial, sans-serif;
     }
     main {
-      max-width: 520px;
-      margin: auto;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 24px;
       background: #151c30;
-      padding: 22px;
       border-radius: 14px;
     }
-    h1 { color: #56c8ff; }
-    label { display: block; margin-top: 14px; }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 7px;
-      border: 1px solid #39445e;
-      border-radius: 8px;
-      font-size: 16px;
+    h1 { color: #60a5fa; }
+    label {
+      display: block;
+      margin-top: 16px;
+      font-weight: bold;
     }
     input, select {
+      width: 100%;
+      margin-top: 7px;
+      padding: 12px;
+      border: 1px solid #39445d;
+      border-radius: 7px;
       background: #0b1020;
       color: white;
     }
     button {
-      margin-top: 20px;
-      background: #1689d8;
-      color: white;
+      width: 100%;
+      margin-top: 22px;
+      padding: 13px;
       border: 0;
+      border-radius: 7px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
       font-weight: bold;
     }
     button:disabled { opacity: .6; }
-    #status { overflow-wrap: anywhere; }
-    a { color: #56c8ff; }
+    #message { white-space: pre-wrap; margin-top: 16px; }
+    a { color: #93c5fd; }
   </style>
 </head>
 <body>
@@ -52,93 +57,90 @@
   <p>Add a title to the KaiFlix database.</p>
 
   <form id="titleForm">
-    <label>Admin Password
-      <input id="password" type="password" required
-        autocomplete="current-password">
-    </label>
+    <label for="password">Admin Password</label>
+    <input id="password" type="password"
+      autocomplete="current-password" required>
 
-    <label>Title
-      <input id="title" required maxlength="200">
-    </label>
+    <label for="title">Title *</label>
+    <input id="title" required maxlength="200">
 
-    <label>Category
-      <select id="category" required>
-        <option value="Movie">Movie</option>
-        <option value="TV Series">TV Series</option>
-        <option value="Anime">Anime</option>
-      </select>
-    </label>
+    <label for="category">Category *</label>
+    <select id="category" required>
+      <option value="Movie">Movie</option>
+      <option value="TV Series">TV Series</option>
+      <option value="Anime">Anime</option>
+    </select>
 
-    <label>Year
-      <input id="year" type="number" min="1888" max="2100">
-    </label>
+    <label for="year">Year</label>
+    <input id="year" type="number" min="1888" max="2100">
 
-    <label>Poster URL
-      <input id="poster" type="url" placeholder="https://...">
-    </label>
+    <label for="poster">Poster URL</label>
+    <input id="poster" type="url" placeholder="https://...">
 
-    <label>Watch Link
-      <input id="watch" type="url" placeholder="https://...">
-    </label>
+    <label for="watch">Watch Link</label>
+    <input id="watch" type="url" placeholder="https://...">
 
-    <label>Download Link
-      <input id="download" type="url" placeholder="https://...">
-    </label>
+    <label for="download">Download Link</label>
+    <input id="download" type="url" placeholder="https://...">
 
-    <button id="saveButton" type="submit">Save Title</button>
+    <button id="saveButton" type="submit">Save to Database</button>
   </form>
 
-  <p id="status" role="status"></p>
+  <p id="message" role="status"></p>
   <p><a href="/">Open KaiFlix Website</a></p>
 </main>
 
 <script>
   const form = document.getElementById("titleForm");
   const button = document.getElementById("saveButton");
-  const status = document.getElementById("status");
+  const message = document.getElementById("message");
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     button.disabled = true;
-    status.textContent = "Saving...";
-
-    const data = {
-      title: document.getElementById("title").value.trim(),
-      category: document.getElementById("category").value,
-      year: document.getElementById("year").value || null,
-      poster_url: document.getElementById("poster").value.trim() || null,
-      watch_url: document.getElementById("watch").value.trim() || null,
-      download_url: document.getElementById("download").value.trim() || null
-    };
+    message.textContent = "Saving...";
 
     try {
+      const yearValue = document.getElementById("year").value;
+
       const response = await fetch("/api/titles", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Admin-Password": document.getElementById("password").value
+          "X-Admin-Password":
+            document.getElementById("password").value
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          title: document.getElementById("title").value.trim(),
+          category: document.getElementById("category").value,
+          year: yearValue ? Number(yearValue) : null,
+          poster_url: document.getElementById("poster").value.trim(),
+          watch_url: document.getElementById("watch").value.trim(),
+          download_url: document.getElementById("download").value.trim()
+        })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          response.status === 401
-            ? "Incorrect password or ADMIN_PASSWORD secret is not configured correctly."
-            : result.error || "Could not save title."
-        );
+        if (response.status === 401) {
+          throw new Error("Password incorrect or Worker Secret configuration issue.");
+        }
+        throw new Error(result.error || "Could not save the title.");
       }
 
-      status.textContent = "Saved successfully! Title ID: " + result.id;
+      message.textContent =
+        "✅ Saved successfully! Database ID: " + result.id;
+
+      const password = document.getElementById("password").value;
       form.reset();
+      document.getElementById("password").value = password;
     } catch (error) {
-      status.textContent = "Error: " + error.message;
+      message.textContent = "❌ Error: " + error.message;
     } finally {
       button.disabled = false;
     }
   });
 </script>
 </body>
-          </html>
+</html>
