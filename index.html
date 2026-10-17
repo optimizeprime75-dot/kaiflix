@@ -4,38 +4,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080b14">
 <title>KaiFlix | Movies, Series & Anime</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#080b14;color:#fff;font-family:Arial,sans-serif}
-header{padding:20px 5%;background:#111827;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header{padding:18px 5%;background:#111827;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid #202b3d}
 .logo{font-size:27px;font-weight:bold;color:#42a5ff}
-nav a{color:#ddd;text-decoration:none;margin:0 7px}
+nav{display:flex;gap:15px;flex-wrap:wrap}
+nav a{color:#ddd;text-decoration:none;font-size:14px}
+nav a:hover{color:#42a5ff}
 .hero{padding:45px 5%;background:linear-gradient(120deg,#102647,#080b14)}
-.hero h1{font-size:36px;margin:0 0 12px}
-.hero p{color:#c4cede}
-.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:#111827;color:white;font-size:16px}
-main{padding:24px 5%}
+.hero h1{font-size:clamp(28px,5vw,40px);margin:0 0 12px;line-height:1.2}
+.hero p{color:#c4cede;line-height:1.6}
+.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:#111827;color:white;font-size:16px;outline:none}
+.search:focus{border-color:#1685ff}
+main{padding:24px 5%;min-height:45vh}
+h2{margin:0 0 16px}
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 25px}
 .filters button{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
 .filters button.active{background:#1685ff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
-.card{background:#111827;border-radius:12px;overflow:hidden;border:1px solid #202b3d}
-.poster{height:205px;background:#1b2940;display:flex;align-items:center;justify-content:center;color:#8da4c4;font-size:14px;text-align:center;overflow:hidden}
-.poster img{width:100%;height:100%;object-fit:cover}
+.card{background:#111827;border-radius:12px;overflow:hidden;border:1px solid #202b3d;min-width:0;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-3px);border-color:#1685ff}
+.poster{aspect-ratio:2/3;background:linear-gradient(145deg,#172b48,#101522);display:flex;align-items:center;justify-content:center;color:#a9bdd8;text-align:center;overflow:hidden;position:relative}
+.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.poster-fallback{padding:12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .info{padding:12px}
-.info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere}
-.info p{font-size:12px;color:#aebbd0}
-.info a,.watch-button{display:block;width:100%;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px;cursor:pointer}
+.info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere;line-height:1.4}
+.info p{font-size:12px;color:#aebbd0;line-height:1.5;overflow-wrap:anywhere}
+.info a{display:block;width:100%;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px}
+.info a:hover{filter:brightness(1.12)}
 .info a.download{background:#26364e}
-#playerSection{display:none;margin:20px 0;padding:16px;background:#111827;border:1px solid #263449;border-radius:12px}
-#playerSection h2{margin-top:0}
-#videoFrame{width:100%;aspect-ratio:16/9;border:0;background:#000;border-radius:8px}
-#closePlayer{background:#dc2626;color:white;border:0;border-radius:7px;padding:11px 16px;margin-bottom:12px;cursor:pointer}
-#playerMessage{color:#aebbd0;font-size:13px;line-height:1.5}
-h2{margin-top:24px}
-footer{text-align:center;padding:25px;color:#8b98ac}
-#status{color:#aebbd0;font-size:14px}
+#status{color:#aebbd0;font-size:14px;line-height:1.5}
+#empty{padding:20px 0;color:#aebbd0}
+footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid #202b3d;font-size:13px}
+@media(max-width:480px){
+ header{padding:16px 4%}
+ .logo{font-size:24px}
+ nav{gap:10px}
+ nav a{font-size:13px}
+ .hero{padding:35px 4%}
+ main{padding:22px 4%}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .poster{aspect-ratio:2/3}
+}
 </style>
 </head>
 <body>
@@ -44,44 +57,31 @@ footer{text-align:center;padding:25px;color:#8b98ac}
   <div class="logo">KaiFlix 🎬</div>
   <nav>
     <a href="#home">Home</a>
-    <a href="#catalog">Movies</a>
-    <a href="#catalog">Series</a>
-    <a href="#catalog">Anime</a>
+    <a href="#catalog" data-nav-cat="Movie">Movies</a>
+    <a href="#catalog" data-nav-cat="TV Series">Series</a>
+    <a href="#catalog" data-nav-cat="Anime">Anime</a>
   </nav>
 </header>
 
 <section class="hero" id="home">
   <h1>Unlimited Stories.<br>One Destination.</h1>
-  <p>Discover Movies, TV Series & Anime.</p>
-  <input class="search" id="search" placeholder="Search your favourite title...">
+  <p>Discover Movies, TV Series &amp; Anime.</p>
+  <input class="search" id="search" type="search"
+    placeholder="Search your favourite title..."
+    aria-label="Search titles">
 </section>
 
 <main id="catalog">
   <h2>Explore Catalog</h2>
 
-  <div id="playerSection">
-    <button id="closePlayer" type="button">✕ Close Player</button>
-    <h2 id="playerTitle">Now Playing</h2>
-    <iframe
-      id="videoFrame"
-      title="KaiFlix Video Player"
-      allow="autoplay; fullscreen; picture-in-picture"
-      allowfullscreen
-      referrerpolicy="strict-origin-when-cross-origin">
-    </iframe>
-    <p id="playerMessage">
-      If the video does not play, check its sharing permissions.
-    </p>
+  <div class="filters" aria-label="Filter by category">
+    <button type="button" class="active" data-cat="All">All</button>
+    <button type="button" data-cat="Movie">Movies</button>
+    <button type="button" data-cat="TV Series">TV Series</button>
+    <button type="button" data-cat="Anime">Anime</button>
   </div>
 
-  <div class="filters">
-    <button class="active" data-cat="All">All</button>
-    <button data-cat="Movie">Movies</button>
-    <button data-cat="TV Series">TV Series</button>
-    <button data-cat="Anime">Anime</button>
-  </div>
-
-  <p id="status">Loading catalog...</p>
+  <p id="status" role="status">Loading catalog...</p>
   <div class="grid" id="grid"></div>
   <p id="empty" hidden>No titles found. Try another search.</p>
 </main>
@@ -96,10 +96,6 @@ const grid=document.getElementById("grid");
 const search=document.getElementById("search");
 const status=document.getElementById("status");
 const empty=document.getElementById("empty");
-const playerSection=document.getElementById("playerSection");
-const videoFrame=document.getElementById("videoFrame");
-const playerTitle=document.getElementById("playerTitle");
-const playerMessage=document.getElementById("playerMessage");
 
 function safeUrl(value){
   if(!value) return "";
@@ -111,65 +107,15 @@ function safeUrl(value){
   }
 }
 
-function escapeHtml(value){
-  return String(value).replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#39;"
-  }[c]));
+function makeLink(url,label,className){
+  const link=document.createElement("a");
+  link.href=url;
+  link.target="_blank";
+  link.rel="noopener noreferrer";
+  link.className=className;
+  link.textContent=label;
+  return link;
 }
-
-function getEmbedUrl(value){
-  const safe=safeUrl(value);
-  if(!safe) return "";
-
-  try{
-    const u=new URL(safe);
-
-    // Convert a Google Drive file share URL to its preview player.
-    if(u.hostname==="drive.google.com"){
-      const match=u.pathname.match(/^\/file\/d\/([^/]+)/);
-
-      if(match){
-        return "https://drive.google.com/file/d/"+
-          encodeURIComponent(match[1])+"/preview";
-      }
-
-      // Keep already valid Drive preview links.
-      if(/^\/file\/d\/[^/]+\/preview$/.test(u.pathname)){
-        return u.href;
-      }
-    }
-
-    // Google Drive URLs from docs.google.com are not converted.
-    return safe;
-  }catch{
-    return "";
-  }
-}
-
-function openPlayer(title,url){
-  const embed=getEmbedUrl(url);
-
-  if(!embed){
-    alert("This title does not have a valid Watch URL.");
-    return;
-  }
-
-  playerTitle.textContent=title||"Now Playing";
-  playerMessage.textContent=
-    "If playback fails, confirm that the video is shared with anyone who has the link.";
-
-  videoFrame.src=embed;
-  playerSection.style.display="block";
-  playerSection.scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-function closePlayer(){
-  videoFrame.src="about:blank";
-  playerSection.style.display="none";
-}
-
-document.getElementById("closePlayer").addEventListener("click",closePlayer);
 
 function render(){
   const q=search.value.toLowerCase().trim();
@@ -188,20 +134,30 @@ function render(){
     const posterBox=document.createElement("div");
     posterBox.className="poster";
 
+    const fallback=document.createElement("div");
+    fallback.className="poster-fallback";
+    fallback.textContent="🎬 Poster unavailable";
+    posterBox.appendChild(fallback);
+
     const poster=safeUrl(t.poster_url);
 
     if(poster){
       const img=document.createElement("img");
-      img.src=poster;
       img.alt=(t.title||"Title")+" poster";
       img.loading="lazy";
-      img.onerror=()=>{
+      img.decoding="async";
+
+      img.addEventListener("load",()=>{
+        fallback.remove();
+      },{once:true});
+
+      img.addEventListener("error",()=>{
         img.remove();
-        posterBox.textContent="Poster unavailable";
-      };
+        fallback.textContent="🎬 Poster unavailable";
+      },{once:true});
+
+      img.src=poster;
       posterBox.appendChild(img);
-    }else{
-      posterBox.textContent="Poster coming soon";
     }
 
     const info=document.createElement("div");
@@ -212,32 +168,20 @@ function render(){
     info.appendChild(title);
 
     const meta=document.createElement("p");
-    meta.textContent=(t.category||"")+" · "+(t.year||"");
+    meta.textContent=[
+      t.category||"Uncategorized",
+      t.year||"Year unknown"
+    ].join(" · ");
     info.appendChild(meta);
 
     const watch=safeUrl(t.watch_url);
-
     if(watch){
-      const watchButton=document.createElement("button");
-      watchButton.type="button";
-      watchButton.className="watch-button";
-      watchButton.textContent="▶ Watch";
-      watchButton.addEventListener("click",()=>{
-        openPlayer(t.title,watch);
-      });
-      info.appendChild(watchButton);
+      info.appendChild(makeLink(watch,"▶ Watch","watch"));
     }
 
     const download=safeUrl(t.download_url);
-
     if(download){
-      const downloadLink=document.createElement("a");
-      downloadLink.className="download";
-      downloadLink.href=download;
-      downloadLink.target="_blank";
-      downloadLink.rel="noopener noreferrer";
-      downloadLink.textContent="↓ Download";
-      info.appendChild(downloadLink);
+      info.appendChild(makeLink(download,"↓ Download","download"));
     }
 
     card.append(posterBox,info);
@@ -253,13 +197,12 @@ async function loadTitles(){
     if(!response.ok) throw new Error("API returned "+response.status);
 
     const data=await response.json();
-
     titles=Array.isArray(data)?data:
       Array.isArray(data.titles)?data.titles:[];
 
     status.textContent=titles.length
-      ? titles.length+" title(s) loaded"
-      : "No titles in the catalog yet.";
+      ?titles.length+" title(s) loaded"
+      :"No titles in the catalog yet.";
 
     render();
   }catch(error){
@@ -271,10 +214,17 @@ async function loadTitles(){
 document.querySelectorAll(".filters button").forEach(btn=>{
   btn.addEventListener("click",()=>{
     category=btn.dataset.cat;
-
     document.querySelectorAll(".filters button")
       .forEach(b=>b.classList.toggle("active",b===btn));
+    render();
+  });
+});
 
+document.querySelectorAll("[data-nav-cat]").forEach(link=>{
+  link.addEventListener("click",()=>{
+    category=link.dataset.navCat;
+    document.querySelectorAll(".filters button")
+      .forEach(b=>b.classList.toggle("active",b===link.dataset.navCat));
     render();
   });
 });
