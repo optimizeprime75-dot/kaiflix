@@ -1,3 +1,4 @@
+
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kaiflix",
@@ -10,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "kaiflix-db",
-      "database_id": "REPLACE_WITH_DATABASE_ID"
+      "database_id": "49d51784-1a54-4e64-8c1f-5fdf3b797974"
     }
   ]
 }
