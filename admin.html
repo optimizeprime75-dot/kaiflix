@@ -1,77 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KaiFlix Admin</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#080b14;color:white;font-family:Arial,sans-serif;padding:22px}
-header{background:#111827;padding:20px;border-radius:12px;margin-bottom:22px}
-h1{color:#42a5ff;margin:0 0 8px}
-p{color:#aebbd0}
-main{max-width:650px;margin:auto}
-section{background:#111827;border:1px solid #273349;padding:20px;border-radius:14px;margin-bottom:20px}
-label{display:block;margin:14px 0 7px}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #34435b;background:#080b14;color:white;font-size:15px}
-button{padding:12px 16px;border:0;border-radius:8px;background:#1685ff;color:white;font-weight:bold;cursor:pointer;margin-top:15px}
-.notice{font-size:13px;color:#ffd479}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaiFlix Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background: #0b1020;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    main {
+      max-width: 520px;
+      margin: auto;
+      background: #151c30;
+      padding: 22px;
+      border-radius: 14px;
+    }
+    h1 { color: #56c8ff; }
+    label { display: block; margin-top: 14px; }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #39445e;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    input, select {
+      background: #0b1020;
+      color: white;
+    }
+    button {
+      margin-top: 20px;
+      background: #1689d8;
+      color: white;
+      border: 0;
+      font-weight: bold;
+    }
+    button:disabled { opacity: .6; }
+    #status { overflow-wrap: anywhere; }
+    a { color: #56c8ff; }
+  </style>
 </head>
 <body>
 <main>
-<header>
-<h1>KaiFlix Admin 🎬</h1>
-<p>Content management dashboard</p>
-</header>
+  <h1>KaiFlix Admin</h1>
+  <p>Add a title to the KaiFlix database.</p>
 
-<section>
-<h2>Add New Content</h2>
-<p class="notice">Demo form only — content is not saved yet.</p>
+  <form id="titleForm">
+    <label>Admin Password
+      <input id="password" type="password" required
+        autocomplete="current-password">
+    </label>
 
-<form id="contentForm">
-<label for="title">Title</label>
-<input id="title" required placeholder="Enter movie or anime name">
+    <label>Title
+      <input id="title" required maxlength="200">
+    </label>
 
-<label for="category">Category</label>
-<select id="category">
-<option>Movie</option>
-<option>TV Series</option>
-<option>Anime</option>
-</select>
+    <label>Category
+      <select id="category" required>
+        <option value="Movie">Movie</option>
+        <option value="TV Series">TV Series</option>
+        <option value="Anime">Anime</option>
+      </select>
+    </label>
 
-<label for="year">Release Year</label>
-<input id="year" type="number" min="1900" max="2100" placeholder="2026">
+    <label>Year
+      <input id="year" type="number" min="1888" max="2100">
+    </label>
 
-<label for="poster">Poster Image URL</label>
-<input id="poster" type="url" placeholder="https://example.com/poster.jpg">
+    <label>Poster URL
+      <input id="poster" type="url" placeholder="https://...">
+    </label>
 
-<label for="watch">Watch Link</label>
-<input id="watch" type="url" placeholder="https://example.com/watch">
+    <label>Watch Link
+      <input id="watch" type="url" placeholder="https://...">
+    </label>
 
-<label for="download">Download Link</label>
-<input id="download" type="url" placeholder="https://example.com/download">
+    <label>Download Link
+      <input id="download" type="url" placeholder="https://...">
+    </label>
 
-<button type="submit">Preview Content</button>
-</form>
-<div id="result"></div>
-</section>
+    <button id="saveButton" type="submit">Save Title</button>
+  </form>
 
-<p><a href="index.html" style="color:#42a5ff">← Back to KaiFlix Home</a></p>
+  <p id="status" role="status"></p>
+  <p><a href="/">Open KaiFlix Website</a></p>
 </main>
 
 <script>
-document.getElementById("contentForm").addEventListener("submit",function(e){
-e.preventDefault();
-const title=document.getElementById("title").value;
-const category=document.getElementById("category").value;
-const year=document.getElementById("year").value;
-document.getElementById("result").innerHTML=
-"<p>Preview: <strong></strong></p>";
-document.querySelector("#result strong").textContent=title;
-document.getElementById("result").innerHTML +=
-"<p>Category: "+category+" · Year: "+(year||"Not set")+"</p>";
-});
+  const form = document.getElementById("titleForm");
+  const button = document.getElementById("saveButton");
+  const status = document.getElementById("status");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    status.textContent = "Saving...";
+
+    const data = {
+      title: document.getElementById("title").value.trim(),
+      category: document.getElementById("category").value,
+      year: document.getElementById("year").value || null,
+      poster_url: document.getElementById("poster").value.trim() || null,
+      watch_url: document.getElementById("watch").value.trim() || null,
+      download_url: document.getElementById("download").value.trim() || null
+    };
+
+    try {
+      const response = await fetch("/api/titles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Password": document.getElementById("password").value
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 401
+            ? "Incorrect password or ADMIN_PASSWORD secret is not configured correctly."
+            : result.error || "Could not save title."
+        );
+      }
+
+      status.textContent = "Saved successfully! Title ID: " + result.id;
+      form.reset();
+    } catch (error) {
+      status.textContent = "Error: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
 </script>
 </body>
-</html>
+          </html>
