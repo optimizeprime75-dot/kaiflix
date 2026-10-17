@@ -1,3 +1,4 @@
+
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kaiflix",
@@ -15,3 +16,4 @@
     }
   ]
 }
+
