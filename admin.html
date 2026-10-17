@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaiFlix Admin</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080b14;color:white;font-family:Arial,sans-serif;padding:22px}
+header{background:#111827;padding:20px;border-radius:12px;margin-bottom:22px}
+h1{color:#42a5ff;margin:0 0 8px}
+p{color:#aebbd0}
+main{max-width:650px;margin:auto}
+section{background:#111827;border:1px solid #273349;padding:20px;border-radius:14px;margin-bottom:20px}
+label{display:block;margin:14px 0 7px}
+input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #34435b;background:#080b14;color:white;font-size:15px}
+button{padding:12px 16px;border:0;border-radius:8px;background:#1685ff;color:white;font-weight:bold;cursor:pointer;margin-top:15px}
+.notice{font-size:13px;color:#ffd479}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>KaiFlix Admin 🎬</h1>
+<p>Content management dashboard</p>
+</header>
+
+<section>
+<h2>Add New Content</h2>
+<p class="notice">Demo form only — content is not saved yet.</p>
+
+<form id="contentForm">
+<label for="title">Title</label>
+<input id="title" required placeholder="Enter movie or anime name">
+
+<label for="category">Category</label>
+<select id="category">
+<option>Movie</option>
+<option>TV Series</option>
+<option>Anime</option>
+</select>
+
+<label for="year">Release Year</label>
+<input id="year" type="number" min="1900" max="2100" placeholder="2026">
+
+<label for="poster">Poster Image URL</label>
+<input id="poster" type="url" placeholder="https://example.com/poster.jpg">
+
+<label for="watch">Watch Link</label>
+<input id="watch" type="url" placeholder="https://example.com/watch">
+
+<label for="download">Download Link</label>
+<input id="download" type="url" placeholder="https://example.com/download">
+
+<button type="submit">Preview Content</button>
+</form>
+<div id="result"></div>
+</section>
+
+<p><a href="index.html" style="color:#42a5ff">← Back to KaiFlix Home</a></p>
+</main>
+
+<script>
+document.getElementById("contentForm").addEventListener("submit",function(e){
+e.preventDefault();
+const title=document.getElementById("title").value;
+const category=document.getElementById("category").value;
+const year=document.getElementById("year").value;
+document.getElementById("result").innerHTML=
+"<p>Preview: <strong></strong></p>";
+document.querySelector("#result strong").textContent=title;
+document.getElementById("result").innerHTML +=
+"<p>Category: "+category+" · Year: "+(year||"Not set")+"</p>";
+});
+</script>
+</body>
+</html>
