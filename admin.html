@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,492 +7,499 @@
 <title>KaiFlix Admin Panel</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
-.container{max-width:850px;margin:auto}
+body{margin:0;padding:14px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
+.container{max-width:900px;margin:auto}
 h1{color:#38bdf8;font-size:27px}
-h2{font-size:20px;margin:8px 0 18px}
-.panel{background:#111827;padding:18px;border-radius:14px;margin:18px 0;border:1px solid #263449}
-label{display:block;margin:13px 0 6px;color:#cbd5e1;font-size:14px}
+h2{font-size:20px}
+h3{font-size:17px}
+.panel{background:#111827;padding:17px;border-radius:14px;margin:17px 0;border:1px solid #263449}
+label{display:block;margin:12px 0 6px;color:#cbd5e1;font-size:14px}
 input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#080d18;color:white;font-size:15px;min-width:0}
-input:focus,select:focus{outline:1px solid #38bdf8}
-button{padding:11px 14px;border:0;border-radius:8px;background:#0284c7;color:white;font-weight:bold;cursor:pointer;font-size:14px}
-button:disabled{opacity:.55;cursor:wait}
-button.secondary{background:#263449}
+button{padding:11px 13px;border:0;border-radius:8px;background:#0284c7;color:white;font-weight:bold;cursor:pointer;font-size:14px}
+button:disabled{opacity:.5}
+button.secondary{background:#334155}
 button.danger{background:#dc2626}
 button.green{background:#15803d}
-button.full{width:100%;margin-top:16px}
+button.full{width:100%;margin-top:14px}
 .hint,.meta{color:#94a3b8;font-size:13px;line-height:1.5}
-.message{margin-top:12px;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
-.title-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:13px;background:#0b1220;border:1px solid #334155;border-radius:10px;padding:12px;margin:12px 0}
-.thumb{width:76px;height:112px;object-fit:cover;border-radius:6px;background:#172b48}
-.thumb-fallback{width:76px;height:112px;border-radius:6px;background:#172b48;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;color:#94a3b8;font-size:12px;overflow-wrap:anywhere}
-.title-name{font-size:16px;font-weight:bold;overflow-wrap:anywhere;margin:3px 0 7px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.actions button{flex:1;min-width:90px}
-#editPanel[hidden]{display:none}
-.preview-wrap{margin-top:12px}
-.poster-preview{width:120px;height:180px;object-fit:cover;background:#172b48;border-radius:8px;border:1px solid #334155;display:block}
-.preview-message{font-size:13px;color:#94a3b8;margin-top:7px;overflow-wrap:anywhere}
-.preview-message.error{color:#f87171}
-.preview-message.ok{color:#4ade80}
-.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.form-actions button{flex:1}
-hr{border:0;border-top:1px solid #263449;margin:22px 0}
-@media(max-width:480px){
- body{padding:10px}
- .panel{padding:13px}
- .title-card{grid-template-columns:65px minmax(0,1fr);gap:10px;padding:10px}
- .thumb,.thumb-fallback{width:65px;height:98px}
- .poster-preview{width:100px;height:150px}
-}
+.message{margin-top:10px;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
+.card{background:#0b1220;border:1px solid #334155;border-radius:10px;padding:13px;margin:12px 0}
+.title-card{display:grid;grid-template-columns:68px minmax(0,1fr);gap:12px}
+.thumb{width:68px;height:100px;object-fit:cover;border-radius:6px;background:#172b48}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.actions button{flex:1;min-width:95px}
+.preview{width:105px;height:155px;object-fit:cover;border-radius:8px;background:#172b48;margin-top:8px}
+.preview-msg{font-size:13px;color:#94a3b8;margin-top:6px;overflow-wrap:anywhere}
+.error{color:#f87171!important}
+.ok{color:#4ade80!important}
+hr{border:0;border-top:1px solid #263449;margin:20px 0}
+[hidden]{display:none!important}
+.season-card{border:1px solid #334155;border-radius:10px;padding:12px;margin:12px 0;background:#080d18}
+.episode{padding:11px 0;border-top:1px solid #263449}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){body{padding:9px}.panel{padding:12px}.grid{grid-template-columns:1fr}.title-card{grid-template-columns:58px minmax(0,1fr)}.thumb{width:58px;height:88px}}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🎬 KaiFlix Admin Panel</h1>
-  <p class="hint">Manage your Movies, TV Series and Anime. Admin access required for changes.</p>
+<h1>🎬 KaiFlix Admin Panel</h1>
+<p class="hint">Manage movies, quality, TV series, anime, seasons and episodes.</p>
 
-  <section class="panel">
-    <h2>🔐 Admin Login</h2>
-    <label for="password">Admin Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="Enter your admin password">
-    <p class="hint">The password is used for protected requests and is not stored by this page.</p>
-  </section>
+<section class="panel">
+<h2>🔐 Admin Login</h2>
+<label for="password">Admin Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Enter admin password">
+<p class="hint">Password is used for protected requests and is not stored by this page.</p>
+</section>
 
-  <section class="panel">
-    <h2>➕ Add New Title</h2>
-    <form id="addForm">
-      <label for="title">Title *</label>
-      <input id="title" required maxlength="200" placeholder="Enter title">
+<section class="panel">
+<h2>➕ Add New Title</h2>
+<form id="addForm">
+<label for="title">Title *</label>
+<input id="title" required maxlength="200" placeholder="Movie or series name">
 
-      <label for="category">Category *</label>
-      <select id="category" required>
-        <option value="Movie">Movie</option>
-        <option value="TV Series">TV Series</option>
-        <option value="Anime">Anime</option>
-      </select>
+<label for="category">Category *</label>
+<select id="category">
+<option>Movie</option><option>TV Series</option><option>Anime</option>
+</select>
 
-      <label for="year">Release Year</label>
-      <input id="year" type="number" min="1888" max="2200" placeholder="e.g. 2026">
+<label for="quality">Movie Quality</label>
+<select id="quality">
+<option value="WEB-DL">WEB-DL</option>
+<option value="HALL PRINT">HALL PRINT</option>
+</select>
+<p class="hint">Quality is mainly displayed for Movies.</p>
 
-      <label for="poster">Poster Image URL</label>
-      <input id="poster" type="url" placeholder="https://image.tmdb.org/t/p/w500/example.jpg">
-      <div class="preview-wrap">
-        <img id="addPreview" class="poster-preview" alt="Poster preview" hidden>
-        <div id="addPreviewMessage" class="preview-message">Enter a direct image URL to preview the poster.</div>
-      </div>
+<label for="year">Release Year</label>
+<input id="year" type="number" min="1888" max="2200" placeholder="2026">
 
-      <label for="watch">Watch URL</label>
-      <input id="watch" type="url" placeholder="https://example.com/watch">
+<label for="poster">Poster Image URL</label>
+<input id="poster" type="url" placeholder="https://image.tmdb.org/t/p/w500/...">
+<img id="addPreview" class="preview" alt="Poster preview" hidden>
+<div id="addPreviewMsg" class="preview-msg">Enter a direct image URL.</div>
 
-      <label for="download">Download URL</label>
-      <input id="download" type="url" placeholder="https://example.com/download">
+<label for="watch">Watch URL (optional)</label>
+<input id="watch" type="url" placeholder="https://example.com/watch">
 
-      <button id="addButton" class="full" type="submit">Add Title</button>
-      <div id="addMessage" class="message" role="status"></div>
-    </form>
-  </section>
+<label for="download">Download URL (optional)</label>
+<input id="download" type="url" placeholder="https://example.com/download">
 
-  <section class="panel">
-    <h2>📚 Manage Catalog</h2>
-    <label for="catalogSearch">🔎 Search titles</label>
-    <input id="catalogSearch" type="search" placeholder="Type a movie, series or anime name...">
-    <button id="refreshButton" class="secondary full" type="button">🔄 Refresh Titles</button>
-    <div id="listMessage" class="message" role="status">Loading titles...</div>
-    <div id="titleList"></div>
-  </section>
+<button class="full" id="addButton">Add Title</button>
+<div id="addMessage" class="message" role="status"></div>
+</form>
+</section>
 
-  <section class="panel" id="editPanel" hidden>
-    <h2>✏️ Edit Title</h2>
-    <p class="hint" id="editId"></p>
+<section class="panel">
+<h2>📚 Manage Catalog</h2>
+<label for="search">🔎 Search titles</label>
+<input id="search" type="search" placeholder="Search movie, series or anime">
+<button id="refresh" class="secondary full" type="button">🔄 Refresh Catalog</button>
+<div id="listMessage" class="message">Loading catalog...</div>
+<div id="titleList"></div>
+</section>
 
-    <form id="editForm">
-      <label for="editTitle">Title *</label>
-      <input id="editTitle" required maxlength="200">
+<section class="panel" id="editPanel" hidden>
+<h2>✏️ Edit Title</h2>
+<p id="editId" class="hint"></p>
+<form id="editForm">
+<label for="editTitle">Title *</label>
+<input id="editTitle" required maxlength="200">
 
-      <label for="editCategory">Category *</label>
-      <select id="editCategory" required>
-        <option value="Movie">Movie</option>
-        <option value="TV Series">TV Series</option>
-        <option value="Anime">Anime</option>
-      </select>
+<label for="editCategory">Category *</label>
+<select id="editCategory"><option>Movie</option><option>TV Series</option><option>Anime</option></select>
 
-      <label for="editYear">Release Year</label>
-      <input id="editYear" type="number" min="1888" max="2200" placeholder="e.g. 2026">
+<label for="editQuality">Movie Quality</label>
+<select id="editQuality"><option value="WEB-DL">WEB-DL</option><option value="HALL PRINT">HALL PRINT</option></select>
 
-      <label for="editPoster">Poster Image URL</label>
-      <input id="editPoster" type="url" placeholder="https://example.com/poster.jpg">
-      <div class="preview-wrap">
-        <img id="editPreview" class="poster-preview" alt="Edited poster preview" hidden>
-        <div id="editPreviewMessage" class="preview-message">Enter a direct image URL to preview the poster.</div>
-      </div>
+<label for="editYear">Release Year</label>
+<input id="editYear" type="number" min="1888" max="2200">
 
-      <label for="editWatch">Watch URL</label>
-      <input id="editWatch" type="url" placeholder="https://example.com/watch">
+<label for="editPoster">Poster Image URL</label>
+<input id="editPoster" type="url">
+<img id="editPreview" class="preview" alt="Poster preview" hidden>
+<div id="editPreviewMsg" class="preview-msg">Enter a direct image URL.</div>
 
-      <label for="editDownload">Download URL</label>
-      <input id="editDownload" type="url" placeholder="https://example.com/download">
+<label for="editWatch">Watch URL</label>
+<input id="editWatch" type="url">
+<label for="editDownload">Download URL</label>
+<input id="editDownload" type="url">
 
-      <div class="form-actions">
-        <button id="saveEditButton" type="submit">💾 Save Changes</button>
-        <button id="cancelEditButton" class="secondary" type="button">Cancel</button>
-      </div>
-      <div id="editMessage" class="message" role="status"></div>
-    </form>
-  </section>
+<div class="actions">
+<button id="saveEdit">💾 Save Changes</button>
+<button id="cancelEdit" type="button" class="secondary">Cancel</button>
+</div>
+<div id="editMessage" class="message" role="status"></div>
+</form>
+</section>
+
+<section class="panel" id="seriesPanel" hidden>
+<h2>📺 Manage Seasons & Episodes</h2>
+<p id="seriesHeading" class="hint"></p>
+
+<div class="card">
+<h3>➕ Add Season</h3>
+<form id="seasonForm">
+<label for="seasonNumber">Season Number</label>
+<input id="seasonNumber" type="number" min="1" max="1000" required placeholder="1">
+<button class="full">Add Season</button>
+<div id="seasonMessage" class="message" role="status"></div>
+</form>
+</div>
+
+<div id="seasonList"></div>
+<div id="seriesMessage" class="message" role="status"></div>
+</section>
+
+<section class="panel" id="episodePanel" hidden>
+<h2>🎞️ Manage Episodes</h2>
+<p id="episodeHeading" class="hint"></p>
+
+<form id="episodeForm">
+<input id="episodeId" type="hidden">
+<label for="episodeNumber">Episode Number *</label>
+<input id="episodeNumber" type="number" min="1" max="10000" required placeholder="1">
+
+<label for="episodeTitle">Episode Title (optional)</label>
+<input id="episodeTitle" maxlength="200" placeholder="Episode name">
+
+<label for="episodeWatch">Watch URL</label>
+<input id="episodeWatch" type="url" placeholder="https://example.com/watch">
+
+<label for="episodeDownload">Download URL</label>
+<input id="episodeDownload" type="url" placeholder="https://example.com/download">
+
+<div class="actions">
+<button id="episodeSave">➕ Add Episode</button>
+<button id="episodeCancel" type="button" class="secondary">Cancel Edit</button>
+</div>
+<div id="episodeMessage" class="message" role="status"></div>
+</form>
+
+<hr>
+<h3>Episodes in this Season</h3>
+<div id="episodeList"></div>
+</section>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-
-const passwordInput=$("password");
-const addForm=$("addForm");
-const editForm=$("editForm");
-const addMessage=$("addMessage");
-const editMessage=$("editMessage");
-const listMessage=$("listMessage");
-const titleList=$("titleList");
-const searchInput=$("catalogSearch");
-const refreshButton=$("refreshButton");
-const editPanel=$("editPanel");
-
+const API="/api";
 let titles=[];
 let editingId=null;
+let activeTitle=null;
+let activeSeason=null;
+let seasons=[];
+let episodes=[];
 
-function getPassword(){
-  const password=passwordInput.value;
-  if(!password){
-    alert("Enter your Admin Password first.");
-    passwordInput.focus();
-    return null;
-  }
-  return password;
+function password(){
+  const p=$("password").value;
+  if(!p){alert("Enter your Admin Password first.");$("password").focus();return null;}
+  return p;
 }
-
-function showMessage(el,message,type="ok"){
-  el.textContent=message;
-  el.style.color=type==="error"?"#f87171":type==="info"?"#94a3b8":"#4ade80";
+function msg(id,text,type="ok"){
+  const el=$(id);el.textContent=text;
+  el.className="message"+(type==="error"?" error":type==="info"?"":" ok");
 }
-
-function safeUrl(value){
-  if(!value)return "";
-  try{
-    const u=new URL(value);
-    return ["http:","https:"].includes(u.protocol)?u.href:"";
-  }catch{return "";}
+function urlValue(v){
+  if(!v)return "";
+  try{const u=new URL(v);return ["https:","http:"].includes(u.protocol)?u.href:"";}
+  catch{return "";}
 }
-
-function setupPreview(inputId,imgId,messageId){
-  const input=$(inputId);
-  const img=$(imgId);
-  const message=$(messageId);
-  let requestNumber=0;
-
+async function api(path,options={}){
+  const headers={...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
+  const r=await fetch(API+path,{...options,headers});
+  let data;
+  try{data=await r.json();}catch{throw new Error("Invalid server response.");}
+  if(!r.ok)throw new Error(data.error||"Request failed: "+r.status);
+  return data;
+}
+function adminOptions(method,body){
+  const p=password();
+  if(!p)return null;
+  return {method,headers:{"X-Admin-Password":p},...(body===undefined?{}:{body:JSON.stringify(body)})};
+}
+function preview(inputId,imgId,msgId){
+  const input=$(inputId),img=$(imgId),label=$(msgId);
+  let seq=0;
   function update(){
-    const current=++requestNumber;
-    const url=safeUrl(input.value.trim());
-
-    img.hidden=true;
-    img.removeAttribute("src");
-    message.className="preview-message";
-
-    if(!input.value.trim()){
-      message.textContent="Enter a direct image URL to preview the poster.";
-      return;
-    }
-
-    if(!url){
-      message.textContent="Invalid URL. Use a valid HTTP or HTTPS image URL.";
-      message.classList.add("error");
-      return;
-    }
-
-    message.textContent="Loading poster preview...";
-
-    img.onload=()=>{
-      if(current!==requestNumber)return;
-      img.hidden=false;
-      message.textContent="✅ Poster loaded successfully.";
-      message.classList.add("ok");
-    };
-
-    img.onerror=()=>{
-      if(current!==requestNumber)return;
-      img.hidden=true;
-      message.textContent="❌ Image could not load. Check that this is a direct image URL.";
-      message.classList.add("error");
-    };
-
-    img.src=url;
+    const n=++seq,u=urlValue(input.value.trim());
+    img.hidden=true;img.removeAttribute("src");
+    label.className="preview-msg";
+    if(!input.value.trim()){label.textContent="Enter a direct image URL.";return;}
+    if(!u){label.textContent="Invalid HTTP/HTTPS URL.";label.classList.add("error");return;}
+    label.textContent="Loading preview...";
+    img.onload=()=>{if(n!==seq)return;img.hidden=false;label.textContent="✅ Poster loaded.";label.classList.add("ok");};
+    img.onerror=()=>{if(n!==seq)return;label.textContent="❌ Image could not load. Use a direct image URL.";label.classList.add("error");};
+    img.src=u;
   }
-
-  input.addEventListener("input",update);
-  return update;
+  input.addEventListener("input",update);return update;
 }
+const updateAddPreview=preview("poster","addPreview","addPreviewMsg");
+const updateEditPreview=preview("editPoster","editPreview","editPreviewMsg");
 
-const updateAddPreview=setupPreview("poster","addPreview","addPreviewMessage");
-const updateEditPreview=setupPreview("editPoster","editPreview","editPreviewMessage");
-
-function createPoster(url,title){
-  const safe=safeUrl(url);
-  if(!safe){
-    const fallback=document.createElement("div");
-    fallback.className="thumb-fallback";
-    fallback.textContent="🎬 No poster";
-    return fallback;
-  }
-
-  const img=document.createElement("img");
-  img.className="thumb";
-  img.alt=(title||"Title")+" poster";
-  img.loading="lazy";
-  img.src=safe;
-
-  img.onerror=()=>{
-    const fallback=document.createElement("div");
-    fallback.className="thumb-fallback";
-    fallback.textContent="🎬 Poster unavailable";
-    img.replaceWith(fallback);
-  };
-
-  return img;
+function poster(url){
+  const u=urlValue(url);
+  if(!u){const d=document.createElement("div");d.className="thumb";d.textContent="🎬";return d;}
+  const i=document.createElement("img");i.className="thumb";i.loading="lazy";i.alt="Poster";i.src=u;
+  i.onerror=()=>{i.removeAttribute("src");i.alt="Poster unavailable";};
+  return i;
 }
-
-async function apiRequest(path,options={}){
-  const response=await fetch(path,{
-    ...options,
-    headers:{
-      ...(options.body?{"Content-Type":"application/json"}:{}),
-      ...(options.headers||{})
-    }
-  });
-
-  let result;
-  try{result=await response.json();}
-  catch{throw new Error("Server returned an invalid response.");}
-
-  if(!response.ok||result.success===false){
-    throw new Error(result.error||"Request failed (HTTP "+response.status+")");
-  }
-
-  return result;
+function button(text,cls,fn){
+  const b=document.createElement("button");b.type="button";b.textContent=text;
+  if(cls)b.className=cls;b.addEventListener("click",fn);return b;
 }
-
-function openEdit(item){
-  editingId=item.id;
-  $("editId").textContent="Database ID: "+item.id;
-  $("editTitle").value=item.title||"";
-  $("editCategory").value=item.category||"Movie";
-  $("editYear").value=item.year||"";
-  $("editPoster").value=item.poster_url||"";
-  $("editWatch").value=item.watch_url||"";
-  $("editDownload").value=item.download_url||"";
-  showMessage(editMessage,"","info");
-  editPanel.hidden=false;
-
-  if(item.poster_url)updateEditPreview();
-  else{
-    $("editPreview").hidden=true;
-    $("editPreviewMessage").textContent="Enter a direct image URL to preview the poster.";
-  }
-
-  editPanel.scrollIntoView({behavior:"smooth",block:"start"});
+function card(title,detail){
+  const d=document.createElement("div");d.className="card";
+  const h=document.createElement("div");h.textContent=title;h.style.fontWeight="bold";
+  const p=document.createElement("div");p.className="meta";p.textContent=detail||"";
+  d.append(h,p);return d;
 }
-
 function renderTitles(){
-  const query=searchInput.value.toLowerCase().trim();
-  const filtered=titles.filter(item=>
-    String(item.title||"").toLowerCase().includes(query)||
-    String(item.category||"").toLowerCase().includes(query)||
-    String(item.year||"").includes(query)
+  const q=$("search").value.toLowerCase().trim();
+  const list=$("titleList");list.replaceChildren();
+  const filtered=titles.filter(t=>
+    [t.title,t.category,t.year].some(v=>String(v||"").toLowerCase().includes(q))
   );
-
-  titleList.replaceChildren();
-
   if(!filtered.length){
-    if(titles.length){
-      const p=document.createElement("p");
-      p.className="hint";
-      p.textContent="No matching titles found.";
-      titleList.appendChild(p);
+    const p=document.createElement("p");p.className="hint";
+    p.textContent=titles.length?"No matching titles found.":"No titles found.";
+    list.append(p);return;
+  }
+  filtered.forEach(t=>{
+    const c=document.createElement("article");c.className="card title-card";
+    c.append(poster(t.poster_url));
+    const right=document.createElement("div");
+    const name=document.createElement("div");name.textContent=t.title;name.style.fontWeight="bold";
+    const meta=document.createElement("p");meta.className="meta";
+    meta.textContent=(t.category||"")+(t.year?" • "+t.year:"")+
+      (t.category==="Movie"?" • "+(t.quality||"WEB-DL"):"")+" • ID "+t.id;
+    const actions=document.createElement("div");actions.className="actions";
+    actions.append(
+      button("✏️ Edit","",()=>openEdit(t)),
+      button("🗑️ Delete","danger",()=>deleteTitle(t))
+    );
+    if(["TV Series","Anime"].includes(t.category)){
+      actions.append(button("📺 Manage Seasons","green",()=>openSeasons(t)));
     }
-    return;
-  }
-
-  for(const item of filtered){
-    const card=document.createElement("article");
-    card.className="title-card";
-    card.appendChild(createPoster(item.poster_url,item.title));
-
-    const content=document.createElement("div");
-    const name=document.createElement("div");
-    name.className="title-name";
-    name.textContent=item.title||"Untitled";
-
-    const meta=document.createElement("div");
-    meta.className="meta";
-    meta.textContent=(item.category||"Uncategorized")+
-      (item.year?" • "+item.year:"")+" • ID: "+item.id;
-
-    content.append(name,meta);
-
-    const actions=document.createElement("div");
-    actions.className="actions";
-
-    const editButton=document.createElement("button");
-    editButton.type="button";
-    editButton.textContent="✏️ Edit";
-    editButton.addEventListener("click",()=>{
-      if(!getPassword())return;
-      openEdit(item);
-    });
-
-    const deleteButton=document.createElement("button");
-    deleteButton.type="button";
-    deleteButton.className="danger";
-    deleteButton.textContent="🗑️ Delete";
-    deleteButton.addEventListener("click",async()=>{
-      const password=getPassword();
-      if(!password)return;
-
-      if(!confirm('Permanently delete "'+(item.title||"Untitled")+'"? This cannot be undone.'))return;
-
-      deleteButton.disabled=true;
-      deleteButton.textContent="Deleting...";
-
-      try{
-        await apiRequest("/api/titles/"+encodeURIComponent(item.id),{
-          method:"DELETE",
-          headers:{"X-Admin-Password":password}
-        });
-
-        if(editingId===item.id){
-          editingId=null;
-          editPanel.hidden=true;
-        }
-
-        showMessage(listMessage,"✅ Title deleted successfully.");
-        await loadTitles();
-      }catch(error){
-        showMessage(listMessage,error.message,true);
-        deleteButton.disabled=false;
-        deleteButton.textContent="🗑️ Delete";
-      }
-    });
-
-    actions.append(editButton,deleteButton);
-    content.appendChild(actions);
-    card.appendChild(content);
-    titleList.appendChild(card);
-  }
+    right.append(name,meta,actions);c.append(right);list.append(c);
+  });
 }
-
 async function loadTitles(){
-  refreshButton.disabled=true;
-  showMessage(listMessage,"Loading titles...","info");
-
+  $("refresh").disabled=true;msg("listMessage","Loading catalog...","info");
   try{
-    const data=await apiRequest("/api/titles");
-    titles=Array.isArray(data)?data:Array.isArray(data.titles)?data.titles:[];
-
-    showMessage(listMessage,"Total titles: "+titles.length,"info");
+    const data=await api("/titles");
+    titles=Array.isArray(data)?data:[];
+    msg("listMessage","Total titles: "+titles.length,"info");
     renderTitles();
-  }catch(error){
-    showMessage(listMessage,"Could not load titles: "+error.message,"error");
-  }finally{
-    refreshButton.disabled=false;
-  }
+  }catch(e){msg("listMessage","Could not load catalog: "+e.message,"error");}
+  finally{$("refresh").disabled=false;}
 }
-
-addForm.addEventListener("submit",async event=>{
-  event.preventDefault();
-  const password=getPassword();
-  if(!password)return;
-
-  const payload={
-    title:$("title").value.trim(),
-    category:$("category").value,
-    year:$("year").value||null,
+function openEdit(t){
+  if(!password())return;
+  editingId=t.id;
+  $("editId").textContent="Database ID: "+t.id;
+  $("editTitle").value=t.title||"";
+  $("editCategory").value=t.category||"Movie";
+  $("editQuality").value=t.quality||"WEB-DL";
+  $("editYear").value=t.year||"";
+  $("editPoster").value=t.poster_url||"";
+  $("editWatch").value=t.watch_url||"";
+  $("editDownload").value=t.download_url||"";
+  msg("editMessage","","info");
+  $("editPanel").hidden=false;
+  updateEditPreview();
+  $("editPanel").scrollIntoView({behavior:"smooth"});
+}
+async function deleteTitle(t){
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
+  if(!confirm('Delete "'+t.title+'", including its seasons and episodes?'))return;
+  try{
+    await api("/titles/"+t.id,opts);
+    if(editingId===t.id){editingId=null;$("editPanel").hidden=true;}
+    if(activeTitle&&activeTitle.id===t.id){
+      $("seriesPanel").hidden=true;$("episodePanel").hidden=true;
+    }
+    msg("listMessage","Title and its seasons/episodes deleted.");
+    await loadTitles();
+  }catch(e){msg("listMessage",e.message,"error");}
+}
+$("addForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const opts=adminOptions("POST",{
+    title:$("title").value.trim(),category:$("category").value,
+    quality:$("quality").value,year:$("year").value||null,
     poster_url:$("poster").value.trim()||null,
     watch_url:$("watch").value.trim()||null,
     download_url:$("download").value.trim()||null
-  };
-
-  const button=$("addButton");
-  button.disabled=true;
-  showMessage(addMessage,"Adding title...","info");
-
+  });
+  if(!opts)return;
+  $("addButton").disabled=true;msg("addMessage","Adding title...","info");
   try{
-    await apiRequest("/api/titles",{
-      method:"POST",
-      headers:{"X-Admin-Password":password},
-      body:JSON.stringify(payload)
-    });
-
-    addForm.reset();
-    $("addPreview").hidden=true;
-    $("addPreview").removeAttribute("src");
-    $("addPreviewMessage").textContent="Enter a direct image URL to preview the poster.";
-    showMessage(addMessage,"✅ Title added successfully.");
-    await loadTitles();
-  }catch(error){
-    showMessage(addMessage,error.message,"error");
-  }finally{
-    button.disabled=false;
-  }
+    await api("/titles",opts);$("addForm").reset();
+    $("addPreview").hidden=true;$("addPreview").removeAttribute("src");
+    $("addPreviewMsg").textContent="Enter a direct image URL.";
+    msg("addMessage","✅ Title added.");await loadTitles();
+  }catch(err){msg("addMessage",err.message,"error");}
+  finally{$("addButton").disabled=false;}
 });
-
-editForm.addEventListener("submit",async event=>{
-  event.preventDefault();
-
-  if(editingId===null){
-    showMessage(editMessage,"Select a title to edit.","error");
-    return;
-  }
-
-  const password=getPassword();
-  if(!password)return;
-
-  const payload={
-    title:$("editTitle").value.trim(),
-    category:$("editCategory").value,
-    year:$("editYear").value||null,
+$("editForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(editingId===null)return;
+  const opts=adminOptions("PUT",{
+    title:$("editTitle").value.trim(),category:$("editCategory").value,
+    quality:$("editQuality").value,year:$("editYear").value||null,
     poster_url:$("editPoster").value.trim()||null,
     watch_url:$("editWatch").value.trim()||null,
     download_url:$("editDownload").value.trim()||null
-  };
-
-  const button=$("saveEditButton");
-  button.disabled=true;
-  showMessage(editMessage,"Saving changes...","info");
-
+  });
+  if(!opts)return;
+  $("saveEdit").disabled=true;msg("editMessage","Saving...","info");
   try{
-    await apiRequest("/api/titles/"+encodeURIComponent(editingId),{
-      method:"PUT",
-      headers:{"X-Admin-Password":password},
-      body:JSON.stringify(payload)
-    });
+    await api("/titles/"+editingId,opts);
+    msg("editMessage","✅ Title updated.");await loadTitles();
+  }catch(err){msg("editMessage",err.message,"error");}
+  finally{$("saveEdit").disabled=false;}
+});
+$("cancelEdit").addEventListener("click",()=>{$("editPanel").hidden=true;editingId=null;});
+$("search").addEventListener("input",renderTitles);
+$("refresh").addEventListener("click",loadTitles);
 
-    showMessage(editMessage,"✅ Changes saved successfully.");
-    await loadTitles();
-    const updated=titles.find(item=>String(item.id)===String(editingId));
-    if(updated)openEdit(updated);
-  }catch(error){
-    showMessage(editMessage,error.message,"error");
-  }finally{
-    button.disabled=false;
+async function openSeasons(t){
+  if(!password())return;
+  activeTitle=t;activeSeason=null;
+  $("seriesPanel").hidden=false;$("episodePanel").hidden=true;
+  $("seriesHeading").textContent=t.title+" • "+t.category;
+  $("seasonList").replaceChildren();
+  msg("seriesMessage","Loading seasons...","info");
+  $("seriesPanel").scrollIntoView({behavior:"smooth"});
+  await loadSeasons();
+}
+async function loadSeasons(){
+  if(!activeTitle)return;
+  try{
+    const data=await api("/titles/"+activeTitle.id+"/seasons");
+    seasons=Array.isArray(data)?data:[];
+    renderSeasons();msg("seriesMessage","Total seasons: "+seasons.length,"info");
+  }catch(e){msg("seriesMessage",e.message,"error");}
+}
+function renderSeasons(){
+  const list=$("seasonList");list.replaceChildren();
+  seasons.forEach(s=>{
+    const c=document.createElement("div");c.className="season-card";
+    const h=document.createElement("h3");h.textContent="Season "+s.season_number;
+    const actions=document.createElement("div");actions.className="actions";
+    actions.append(
+      button("🎞️ Manage Episodes","green",()=>openEpisodes(s)),
+      button("✏️ Rename Season","secondary",()=>editSeason(s)),
+      button("🗑️ Delete Season","danger",()=>deleteSeason(s))
+    );
+    c.append(h,actions);list.append(c);
+  });
+}
+$("seasonForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(!activeTitle)return;
+  const opts=adminOptions("POST",{season_number:$("seasonNumber").value});
+  if(!opts)return;
+  try{
+    await api("/titles/"+activeTitle.id+"/seasons",opts);
+    $("seasonNumber").value="";msg("seasonMessage","✅ Season added.");
+    await loadSeasons();
+  }catch(err){msg("seasonMessage",err.message,"error");}
+});
+async function editSeason(s){
+  const n=prompt("Enter new season number:",s.season_number);
+  if(n===null)return;
+  if(!/^\d+$/.test(n)||Number(n)<1){alert("Enter a valid season number.");return;}
+  const opts=adminOptions("PUT",{season_number:Number(n)});if(!opts)return;
+  try{
+    await api("/seasons/"+s.id,opts);
+    msg("seriesMessage","Season updated.");await loadSeasons();
+  }catch(e){msg("seriesMessage",e.message,"error");}
+}
+async function deleteSeason(s){
+  const opts=adminOptions("DELETE");if(!opts)return;
+  if(!confirm("Delete Season "+s.season_number+" and all its episodes?"))return;
+  try{
+    await api("/seasons/"+s.id,opts);
+    if(activeSeason&&activeSeason.id===s.id){$("episodePanel").hidden=true;activeSeason=null;}
+    msg("seriesMessage","Season and episodes deleted.");await loadSeasons();
+  }catch(e){msg("seriesMessage",e.message,"error");}
+}
+async function openEpisodes(s){
+  activeSeason=s;
+  $("episodePanel").hidden=false;
+  $("episodeHeading").textContent=activeTitle.title+" • Season "+s.season_number;
+  resetEpisodeForm();$("episodeList").replaceChildren();
+  $("episodePanel").scrollIntoView({behavior:"smooth"});
+  await loadEpisodes();
+}
+async function loadEpisodes(){
+  if(!activeSeason)return;
+  try{
+    const data=await api("/seasons/"+activeSeason.id+"/episodes");
+    episodes=Array.isArray(data)?data:[];
+    renderEpisodes();
+  }catch(e){msg("episodeMessage",e.message,"error");}
+}
+function renderEpisodes(){
+  const list=$("episodeList");list.replaceChildren();
+  if(!episodes.length){
+    const p=document.createElement("p");p.className="hint";p.textContent="No episodes added yet.";
+    list.append(p);return;
   }
+  episodes.forEach(ep=>{
+    const c=document.createElement("div");c.className="episode";
+    const h=document.createElement("strong");
+    h.textContent="Episode "+ep.episode_number+(ep.title?" — "+ep.title:"");
+    const m=document.createElement("p");m.className="meta";
+    m.textContent="Watch: "+(ep.watch_url||"Not set")+" | Download: "+(ep.download_url||"Not set");
+    const a=document.createElement("div");a.className="actions";
+    a.append(button("✏️ Edit","",()=>editEpisode(ep)),button("🗑️ Delete","danger",()=>deleteEpisode(ep)));
+    c.append(h,m,a);list.append(c);
+  });
+}
+function resetEpisodeForm(){
+  $("episodeId").value="";$("episodeForm").reset();
+  $("episodeSave").textContent="➕ Add Episode";
+  msg("episodeMessage","","info");
+}
+function editEpisode(ep){
+  $("episodeId").value=ep.id;
+  $("episodeNumber").value=ep.episode_number;
+  $("episodeTitle").value=ep.title||"";
+  $("episodeWatch").value=ep.watch_url||"";
+  $("episodeDownload").value=ep.download_url||"";
+  $("episodeSave").textContent="💾 Save Episode";
+  msg("episodeMessage","Editing Episode "+ep.episode_number,"info");
+  $("episodePanel").scrollIntoView({behavior:"smooth"});
+}
+$("episodeCancel").addEventListener("click",resetEpisodeForm);
+$("episodeForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(!activeSeason)return;
+  const id=$("episodeId").value;
+  const body={
+    episode_number:$("episodeNumber").value,
+    title:$("episodeTitle").value.trim()||null,
+    watch_url:$("episodeWatch").value.trim()||null,
+    download_url:$("episodeDownload").value.trim()||null
+  };
+  const opts=adminOptions(id?"PUT":"POST",body);if(!opts)return;
+  try{
+    if(id)await api("/episodes/"+id,opts);
+    else await api("/seasons/"+activeSeason.id+"/episodes",opts);
+    resetEpisodeForm();msg("episodeMessage",id?"Episode updated.":"Episode added.");
+    await loadEpisodes();
+  }catch(err){msg("episodeMessage",err.message,"error");}
 });
-
-$("cancelEditButton").addEventListener("click",()=>{
-  editingId=null;
-  editPanel.hidden=true;
-});
-
-searchInput.addEventListener("input",renderTitles);
-refreshButton.addEventListener("click",loadTitles);
-
+async function deleteEpisode(ep){
+  const opts=adminOptions("DELETE");if(!opts)return;
+  if(!confirm("Delete Episode "+ep.episode_number+"?"))return;
+  try{
+    await api("/episodes/"+ep.id,opts);
+    msg("episodeMessage","Episode deleted.");await loadEpisodes();
+  }catch(e){msg("episodeMessage",e.message,"error");}
+}
 loadTitles();
 </script>
 </body>
-</html>
+ </html>
