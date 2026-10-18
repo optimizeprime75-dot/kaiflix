@@ -5,41 +5,70 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080b14">
+<meta name="description" content="Discover Movies, TV Series and Anime on KaiFlix.">
 <title>KaiFlix | Movies, Series & Anime</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080b14;color:#fff;font-family:Arial,sans-serif}
-header{padding:18px 5%;background:#111827;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid #202b3d}
-.logo{font-size:27px;font-weight:bold;color:#42a5ff}
+:root{--bg:#080b14;--panel:#111827;--line:#202b3d;--blue:#1685ff;--muted:#aebbd0}
+body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
+header{padding:18px 5%;background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.logo{font-size:27px;font-weight:bold;color:#42a5ff;cursor:pointer}
 nav{display:flex;gap:15px;flex-wrap:wrap}
 nav a{color:#ddd;text-decoration:none;font-size:14px}
 nav a:hover{color:#42a5ff}
 .hero{padding:45px 5%;background:linear-gradient(120deg,#102647,#080b14)}
 .hero h1{font-size:clamp(28px,5vw,40px);margin:0 0 12px;line-height:1.2}
 .hero p{color:#c4cede;line-height:1.6}
-.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:#111827;color:white;font-size:16px;outline:none}
-.search:focus{border-color:#1685ff}
+.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:var(--panel);color:white;font-size:16px;outline:none}
+.search:focus{border-color:var(--blue)}
 main{padding:24px 5%;min-height:45vh}
 h2{margin:0 0 16px}
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 25px}
-.filters button{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
-.filters button.active{background:#1685ff}
+button{font-family:inherit}
+.filters button,.secondary-btn{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
+.filters button.active{background:var(--blue)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
-.card{background:#111827;border-radius:12px;overflow:hidden;border:1px solid #202b3d;min-width:0;transition:transform .2s,border-color .2s}
-.card:hover{transform:translateY(-3px);border-color:#1685ff}
+.card{background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line);min-width:0;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--blue)}
 .poster{aspect-ratio:2/3;background:linear-gradient(145deg,#172b48,#101522);display:flex;align-items:center;justify-content:center;color:#a9bdd8;text-align:center;overflow:hidden;position:relative}
 .poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .poster-fallback{padding:12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .info{padding:12px}
 .info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere;line-height:1.4}
-.info p{font-size:12px;color:#aebbd0;line-height:1.5;overflow-wrap:anywhere}
-.info a{display:block;width:100%;text-align:center;background:#1685ff;color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px}
-.info a:hover{filter:brightness(1.12)}
+.info p{font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.info a,.action-btn{display:block;width:100%;text-align:center;background:var(--blue);color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px;cursor:pointer}
+.info a:hover,.action-btn:hover{filter:brightness(1.12)}
 .info a.download{background:#26364e}
-#status{color:#aebbd0;font-size:14px;line-height:1.5}
-#empty{padding:20px 0;color:#aebbd0}
-footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid #202b3d;font-size:13px}
-@media(max-width:480px){
+.quality{display:inline-block;font-size:10px;font-weight:bold;letter-spacing:.3px;padding:5px 7px;border-radius:5px;margin:0 0 8px;background:#123d2b;color:#76f0ae}
+.quality.hall{background:#492d13;color:#ffd08a}
+.type-badge{display:inline-block;font-size:10px;padding:5px 7px;border-radius:5px;background:#202b3d;color:#b9d8ff;margin:0 0 8px}
+#status{color:var(--muted);font-size:14px;line-height:1.5}
+#empty{padding:20px 0;color:var(--muted)}
+#detail{display:none}
+.breadcrumb{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px;color:var(--muted);font-size:13px}
+.breadcrumb button{border:0;background:none;color:#69b5ff;cursor:pointer;padding:0;font-size:13px}
+.detail-layout{display:grid;grid-template-columns:minmax(130px,220px) minmax(0,1fr);gap:25px;align-items:start}
+.detail-poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:12px;background:#172b48}
+.detail-description h1{font-size:clamp(25px,4vw,36px);margin:0 0 12px;overflow-wrap:anywhere}
+.detail-description p{color:#c4cede;line-height:1.7;font-size:14px}
+.section-heading{margin:30px 0 15px}
+.season-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}
+.season-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;color:white;text-align:left}
+.season-card:hover{border-color:var(--blue)}
+.season-card strong{display:block;margin-bottom:8px}
+.season-card span{font-size:12px;color:var(--muted)}
+.episode-list{display:grid;gap:12px}
+.episode-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.episode-card h3{margin:0 0 6px;font-size:15px;overflow-wrap:anywhere}
+.episode-card p{margin:0;color:var(--muted);font-size:12px}
+.episode-actions{display:flex;gap:8px;flex-wrap:wrap}
+.episode-actions a{padding:9px 12px;border-radius:7px;background:var(--blue);color:#fff;text-decoration:none;font-size:12px;white-space:nowrap}
+.episode-actions a.download{background:#26364e}
+.back-btn{display:inline-block;margin-bottom:18px;border:1px solid #34435b;background:#111827;color:white;padding:10px 14px;border-radius:8px;cursor:pointer}
+#detailStatus{color:var(--muted);line-height:1.6}
+.hidden{display:none!important}
+footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--line);font-size:13px}
+@media(max-width:600px){
  header{padding:16px 4%}
  .logo{font-size:24px}
  nav{gap:10px}
@@ -48,13 +77,18 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid #202b3d
  main{padding:22px 4%}
  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
  .poster{aspect-ratio:2/3}
+ .detail-layout{grid-template-columns:105px minmax(0,1fr);gap:14px}
+ .detail-description h1{font-size:23px}
+ .episode-card{align-items:flex-start;flex-direction:column}
+ .episode-actions{width:100%}
+ .episode-actions a{flex:1;text-align:center}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">KaiFlix 🎬</div>
+  <div class="logo" id="logo">KaiFlix 🎬</div>
   <nav>
     <a href="#home">Home</a>
     <a href="#catalog" data-nav-cat="Movie">Movies</a>
@@ -63,174 +97,465 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid #202b3d
   </nav>
 </header>
 
-<section class="hero" id="home">
+<section class="hero" id="hero">
   <h1>Unlimited Stories.<br>One Destination.</h1>
   <p>Discover Movies, TV Series &amp; Anime.</p>
-  <input class="search" id="search" type="search"
-    placeholder="Search your favourite title..."
-    aria-label="Search titles">
+  <input class="search" id="search" type="search" placeholder="Search your favourite title..." aria-label="Search titles">
 </section>
 
-<main id="catalog">
-  <h2>Explore Catalog</h2>
+<main>
+  <section id="catalog">
+    <h2>Explore Catalog</h2>
+    <div class="filters" aria-label="Filter by category">
+      <button type="button" class="active" data-cat="All">All</button>
+      <button type="button" data-cat="Movie">Movies</button>
+      <button type="button" data-cat="TV Series">TV Series</button>
+      <button type="button" data-cat="Anime">Anime</button>
+    </div>
+    <p id="status" role="status">Loading catalog...</p>
+    <div class="grid" id="grid"></div>
+    <p id="empty" hidden>No titles found. Try another search.</p>
+  </section>
 
-  <div class="filters" aria-label="Filter by category">
-    <button type="button" class="active" data-cat="All">All</button>
-    <button type="button" data-cat="Movie">Movies</button>
-    <button type="button" data-cat="TV Series">TV Series</button>
-    <button type="button" data-cat="Anime">Anime</button>
-  </div>
-
-  <p id="status" role="status">Loading catalog...</p>
-  <div class="grid" id="grid"></div>
-  <p id="empty" hidden>No titles found. Try another search.</p>
+  <section id="detail">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <button type="button" class="back-btn" id="backBtn">← Back to Catalog</button>
+    <p id="detailStatus" role="status"></p>
+    <div id="detailContent"></div>
+  </section>
 </main>
 
 <footer>© 2026 KaiFlix · Your entertainment hub</footer>
 
 <script>
-let titles=[];
-let category="All";
+"use strict";
 
-const grid=document.getElementById("grid");
-const search=document.getElementById("search");
-const status=document.getElementById("status");
-const empty=document.getElementById("empty");
+let titles = [];
+let category = "All";
+let detailReturnCategory = "All";
+let routeToken = 0;
 
-function safeUrl(value){
-  if(!value) return "";
-  try{
-    const u=new URL(value);
-    return ["http:","https:"].includes(u.protocol)?u.href:"";
-  }catch{
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
+const status = document.getElementById("status");
+const empty = document.getElementById("empty");
+const catalog = document.getElementById("catalog");
+const detail = document.getElementById("detail");
+const detailContent = document.getElementById("detailContent");
+const detailStatus = document.getElementById("detailStatus");
+const breadcrumb = document.getElementById("breadcrumb");
+const hero = document.getElementById("hero");
+
+function safeUrl(value) {
+  if (!value) return "";
+  try {
+    const u = new URL(value);
+    return ["http:", "https:"].includes(u.protocol) ? u.href : "";
+  } catch {
     return "";
   }
 }
 
-function makeLink(url,label,className){
-  const link=document.createElement("a");
-  link.href=url;
-  link.target="_blank";
-  link.rel="noopener noreferrer";
-  link.className=className;
-  link.textContent=label;
+async function api(path) {
+  const response = await fetch(path, { headers: { "Accept": "application/json" } });
+  if (!response.ok) throw new Error("Request failed (" + response.status + ")");
+  return response.json();
+}
+
+function getRows(data, key) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data[key])) return data[key];
+  if (data && Array.isArray(data.results)) return data.results;
+  return [];
+}
+
+function makeLink(url, label, className) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = className || "";
+  link.textContent = label;
   return link;
 }
 
-function render(){
-  const q=search.value.toLowerCase().trim();
+function makePoster(url, title) {
+  const box = document.createElement("div");
+  box.className = "poster";
 
-  const items=titles.filter(t=>
-    (category==="All"||t.category===category)&&
-    String(t.title||"").toLowerCase().includes(q)
+  const fallback = document.createElement("div");
+  fallback.className = "poster-fallback";
+  fallback.textContent = "🎬 Poster unavailable";
+  box.appendChild(fallback);
+
+  const poster = safeUrl(url);
+  if (poster) {
+    const img = document.createElement("img");
+    img.alt = (title || "Title") + " poster";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.addEventListener("load", () => fallback.remove(), { once: true });
+    img.addEventListener("error", () => {
+      img.remove();
+      fallback.textContent = "🎬 Poster unavailable";
+    }, { once: true });
+    img.src = poster;
+    box.appendChild(img);
+  }
+  return box;
+}
+
+function setCategory(value) {
+  category = value;
+  document.querySelectorAll(".filters button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.cat === value);
+  });
+  render();
+}
+
+function render() {
+  const q = search.value.toLowerCase().trim();
+  const items = titles.filter(t =>
+    (category === "All" || t.category === category) &&
+    String(t.title || "").toLowerCase().includes(q)
   );
 
   grid.replaceChildren();
 
-  for(const t of items){
-    const card=document.createElement("article");
-    card.className="card";
+  for (const t of items) {
+    const card = document.createElement("article");
+    card.className = "card";
 
-    const posterBox=document.createElement("div");
-    posterBox.className="poster";
+    const poster = makePoster(t.poster_url, t.title);
+    const info = document.createElement("div");
+    info.className = "info";
 
-    const fallback=document.createElement("div");
-    fallback.className="poster-fallback";
-    fallback.textContent="🎬 Poster unavailable";
-    posterBox.appendChild(fallback);
-
-    const poster=safeUrl(t.poster_url);
-
-    if(poster){
-      const img=document.createElement("img");
-      img.alt=(t.title||"Title")+" poster";
-      img.loading="lazy";
-      img.decoding="async";
-
-      img.addEventListener("load",()=>{
-        fallback.remove();
-      },{once:true});
-
-      img.addEventListener("error",()=>{
-        img.remove();
-        fallback.textContent="🎬 Poster unavailable";
-      },{once:true});
-
-      img.src=poster;
-      posterBox.appendChild(img);
-    }
-
-    const info=document.createElement("div");
-    info.className="info";
-
-    const title=document.createElement("h3");
-    title.textContent=t.title||"Untitled";
+    const title = document.createElement("h3");
+    title.textContent = t.title || "Untitled";
     info.appendChild(title);
 
-    const meta=document.createElement("p");
-    meta.textContent=[
-      t.category||"Uncategorized",
-      t.year||"Year unknown"
+    if (t.category === "Movie") {
+      const quality = document.createElement("span");
+      const isHall = String(t.quality || "WEB-DL").toUpperCase() === "HALL PRINT";
+      quality.className = "quality" + (isHall ? " hall" : "");
+      quality.textContent = isHall ? "HALL PRINT" : "WEB-DL";
+      info.appendChild(quality);
+    } else {
+      const type = document.createElement("span");
+      type.className = "type-badge";
+      type.textContent = t.category === "Anime" ? "ANIME" : "TV SERIES";
+      info.appendChild(type);
+    }
+
+    const meta = document.createElement("p");
+    meta.textContent = [
+      t.category || "Uncategorized",
+      t.year || "Year unknown"
     ].join(" · ");
     info.appendChild(meta);
 
-    const watch=safeUrl(t.watch_url);
-    if(watch){
-      info.appendChild(makeLink(watch,"▶ Watch","watch"));
+    if (t.category === "Movie") {
+      const watch = safeUrl(t.watch_url);
+      if (watch) info.appendChild(makeLink(watch, "▶ Watch", "watch"));
+
+      const download = safeUrl(t.download_url);
+      if (download) info.appendChild(makeLink(download, "↓ Download", "download"));
+    } else {
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "action-btn";
+      open.textContent = "View Details →";
+      open.addEventListener("click", () => {
+        detailReturnCategory = category;
+        location.hash = "title/" + encodeURIComponent(t.id);
+      });
+      info.appendChild(open);
+      card.style.cursor = "pointer";
+      card.addEventListener("click", event => {
+        if (event.target.closest("a,button")) return;
+        detailReturnCategory = category;
+        location.hash = "title/" + encodeURIComponent(t.id);
+      });
     }
 
-    const download=safeUrl(t.download_url);
-    if(download){
-      info.appendChild(makeLink(download,"↓ Download","download"));
-    }
-
-    card.append(posterBox,info);
+    card.append(poster, info);
     grid.appendChild(card);
   }
 
-  empty.hidden=items.length>0;
+  empty.hidden = items.length > 0;
+  if (!titles.length) status.textContent = "No titles in the catalog yet.";
+  else status.textContent = items.length + " title(s) shown";
 }
 
-async function loadTitles(){
-  try{
-    const response=await fetch("/api/titles");
-    if(!response.ok) throw new Error("API returned "+response.status);
+function setBreadcrumb(items) {
+  breadcrumb.replaceChildren();
+  items.forEach((item, index) => {
+    if (index) {
+      const separator = document.createElement("span");
+      separator.textContent = "›";
+      breadcrumb.appendChild(separator);
+    }
+    if (item.action) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = item.label;
+      btn.addEventListener("click", item.action);
+      breadcrumb.appendChild(btn);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = item.label;
+      breadcrumb.appendChild(span);
+    }
+  });
+}
 
-    const data=await response.json();
-    titles=Array.isArray(data)?data:
-      Array.isArray(data.titles)?data.titles:[];
+function showCatalog() {
+  routeToken++;
+  detail.style.display = "none";
+  catalog.style.display = "";
+  hero.style.display = "";
+  window.scrollTo(0, 0);
+  render();
+}
 
-    status.textContent=titles.length
-      ?titles.length+" title(s) loaded"
-      :"No titles in the catalog yet.";
+function showDetailLoading(message) {
+  catalog.style.display = "none";
+  hero.style.display = "none";
+  detail.style.display = "block";
+  detailContent.replaceChildren();
+  detailStatus.textContent = message || "Loading...";
+  setBreadcrumb([{ label: "Home", action: showCatalog }]);
+}
 
-    render();
-  }catch(error){
-    status.textContent="Could not load catalog. Please try again later.";
-    console.error("KaiFlix catalog error:",error);
+function makeBackButton() {
+  document.getElementById("backBtn").onclick = () => {
+    location.hash = "catalog";
+    if (location.hash === "#catalog") showCatalog();
+  };
+}
+
+async function openTitle(id) {
+  const token = ++routeToken;
+  showDetailLoading("Loading title details...");
+  try {
+    const [titleData, seasonsData] = await Promise.all([
+      api("/api/titles/" + encodeURIComponent(id)),
+      api("/api/titles/" + encodeURIComponent(id) + "/seasons")
+    ]);
+    if (token !== routeToken) return;
+
+    const t = titleData && titleData.title ? titleData.title : titleData;
+    if (!t || !t.id) throw new Error("Title not found.");
+
+    const seasons = getRows(seasonsData, "seasons").sort((a,b) => a.season_number - b.season_number);
+    detailStatus.textContent = "";
+    setBreadcrumb([
+      { label: "Home", action: showCatalog },
+      { label: t.category || "Catalog", action: () => { setCategory(t.category || "All"); showCatalog(); } },
+      { label: t.title || "Details" }
+    ]);
+
+    const layout = document.createElement("div");
+    layout.className = "detail-layout";
+
+    const poster = makePoster(t.poster_url, t.title);
+    poster.className = "poster detail-poster";
+    layout.appendChild(poster);
+
+    const description = document.createElement("div");
+    description.className = "detail-description";
+
+    const heading = document.createElement("h1");
+    heading.textContent = t.title || "Untitled";
+    description.appendChild(heading);
+
+    const meta = document.createElement("p");
+    meta.textContent = [t.category, t.year || "Year unknown"].filter(Boolean).join(" · ");
+    description.appendChild(meta);
+
+    const intro = document.createElement("p");
+    intro.textContent = "Choose a season below to explore episodes and their available Watch and Download links.";
+    description.appendChild(intro);
+    layout.appendChild(description);
+    detailContent.appendChild(layout);
+
+    const seasonHeading = document.createElement("h2");
+    seasonHeading.className = "section-heading";
+    seasonHeading.textContent = "Seasons";
+    detailContent.appendChild(seasonHeading);
+
+    if (!seasons.length) {
+      const msg = document.createElement("p");
+      msg.id = "detailStatus";
+      msg.textContent = "No seasons added yet.";
+      msg.style.color = "var(--muted)";
+      detailContent.appendChild(msg);
+    } else {
+      const seasonList = document.createElement("div");
+      seasonList.className = "season-list";
+
+      for (const season of seasons) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "season-card";
+
+        const name = document.createElement("strong");
+        name.textContent = "Season " + season.season_number;
+        const sub = document.createElement("span");
+        sub.textContent = "View episodes →";
+
+        btn.append(name, sub);
+        btn.addEventListener("click", () => {
+          location.hash = "season/" + encodeURIComponent(season.id);
+        });
+        seasonList.appendChild(btn);
+      }
+      detailContent.appendChild(seasonList);
+    }
+  } catch (error) {
+    if (token !== routeToken) return;
+    detailStatus.textContent = "Could not load this title. Please check the API and try again.";
+    console.error("KaiFlix title error:", error);
   }
 }
 
-document.querySelectorAll(".filters button").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    category=btn.dataset.cat;
-    document.querySelectorAll(".filters button")
-      .forEach(b=>b.classList.toggle("active",b===btn));
+async function openSeason(id) {
+  const token = ++routeToken;
+  showDetailLoading("Loading episodes...");
+  try {
+    const seasonData = await api("/api/seasons/" + encodeURIComponent(id));
+    if (token !== routeToken) return;
+
+    const season = seasonData && seasonData.season ? seasonData.season : seasonData;
+    if (!season || !season.id) throw new Error("Season not found.");
+
+    const [episodesData, titleData] = await Promise.all([
+      api("/api/seasons/" + encodeURIComponent(id) + "/episodes"),
+      api("/api/titles/" + encodeURIComponent(season.title_id))
+    ]);
+    if (token !== routeToken) return;
+
+    const title = titleData && titleData.title ? titleData.title : titleData;
+    const episodes = getRows(episodesData, "episodes").sort((a,b) => a.episode_number - b.episode_number);
+
+    setBreadcrumb([
+      { label: "Home", action: showCatalog },
+      { label: title.title || "Series", action: () => { location.hash = "title/" + encodeURIComponent(season.title_id); } },
+      { label: "Season " + season.season_number }
+    ]);
+    detailStatus.textContent = "";
+
+    const heading = document.createElement("h1");
+    heading.textContent = (title.title || "Series") + " — Season " + season.season_number;
+    heading.style.fontSize = "clamp(24px,4vw,34px)";
+    detailContent.appendChild(heading);
+
+    const count = document.createElement("p");
+    count.style.color = "var(--muted)";
+    count.textContent = episodes.length + " episode(s)";
+    detailContent.appendChild(count);
+
+    if (!episodes.length) {
+      const msg = document.createElement("p");
+      msg.style.color = "var(--muted)";
+      msg.textContent = "No episodes added to this season yet.";
+      detailContent.appendChild(msg);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "episode-list";
+
+    for (const ep of episodes) {
+      const card = document.createElement("article");
+      card.className = "episode-card";
+
+      const info = document.createElement("div");
+      const epHeading = document.createElement("h3");
+      epHeading.textContent = "Episode " + ep.episode_number + (ep.title ? " — " + ep.title : "");
+      const epMeta = document.createElement("p");
+      epMeta.textContent = title.title || "KaiFlix episode";
+      info.append(epHeading, epMeta);
+      card.appendChild(info);
+
+      const actions = document.createElement("div");
+      actions.className = "episode-actions";
+
+      const watch = safeUrl(ep.watch_url);
+      const download = safeUrl(ep.download_url);
+
+      if (watch) actions.appendChild(makeLink(watch, "▶ Watch", "watch"));
+      if (download) actions.appendChild(makeLink(download, "↓ Download", "download"));
+
+      if (!watch && !download) {
+        const unavailable = document.createElement("span");
+        unavailable.style.color = "var(--muted)";
+        unavailable.textContent = "Links not available";
+        actions.appendChild(unavailable);
+      }
+
+      card.appendChild(actions);
+      list.appendChild(card);
+    }
+    detailContent.appendChild(list);
+  } catch (error) {
+    if (token !== routeToken) return;
+    detailStatus.textContent = "Could not load episodes. Please check the API and try again.";
+    console.error("KaiFlix season error:", error);
+  }
+}
+
+function route() {
+  const hash = decodeURIComponent(location.hash || "#catalog");
+  if (hash.startsWith("#title/")) {
+    const id = hash.slice("#title/".length);
+    if (id) openTitle(id);
+    return;
+  }
+  if (hash.startsWith("#season/")) {
+    const id = hash.slice("#season/".length);
+    if (id) openSeason(id);
+    return;
+  }
+  showCatalog();
+}
+
+async function loadTitles() {
+  try {
+    const data = await api("/api/titles");
+    titles = getRows(data, "titles");
+    status.textContent = titles.length
+      ? titles.length + " title(s) loaded"
+      : "No titles in the catalog yet.";
     render();
-  });
+  } catch (error) {
+    status.textContent = "Could not load catalog. Please try again later.";
+    console.error("KaiFlix catalog error:", error);
+  }
+}
+
+document.querySelectorAll(".filters button").forEach(btn => {
+  btn.addEventListener("click", () => setCategory(btn.dataset.cat));
 });
 
-document.querySelectorAll("[data-nav-cat]").forEach(link=>{
-  link.addEventListener("click",()=>{
-    category=link.dataset.navCat;
-    document.querySelectorAll(".filters button")
-      .forEach(b=>b.classList.toggle("active",b===link.dataset.navCat));
-    render();
-  });
+document.querySelectorAll("[data-nav-cat]").forEach(link => {
+  link.addEventListener("click", () => setCategory(link.dataset.navCat));
 });
 
-search.addEventListener("input",render);
+search.addEventListener("input", render);
+
+document.getElementById("logo").addEventListener("click", () => {
+  location.hash = "catalog";
+  showCatalog();
+});
+
+window.addEventListener("hashchange", route);
+makeBackButton();
 loadTitles();
+
+if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) {
+  route();
+}
 </script>
 </body>
 </html>
