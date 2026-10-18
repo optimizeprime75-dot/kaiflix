@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,13 +38,14 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 .season-card{border:1px solid #334155;border-radius:10px;padding:12px;margin:12px 0;background:#080d18}
 .episode{padding:11px 0;border-top:1px solid #263449}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.imdb-rating{color:#fbbf24;font-weight:bold}
 @media(max-width:520px){body{padding:9px}.panel{padding:12px}.grid{grid-template-columns:1fr}.title-card{grid-template-columns:58px minmax(0,1fr)}.thumb{width:58px;height:88px}}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>🎬 KaiFlix Admin Panel</h1>
-<p class="hint">Manage movies, quality, TV series, anime, seasons and episodes.</p>
+<p class="hint">Manage movies, ratings, quality, TV series, anime, seasons and episodes.</p>
 
 <section class="panel">
 <h2>🔐 Admin Login</h2>
@@ -73,6 +75,10 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 <label for="year">Release Year</label>
 <input id="year" type="number" min="1888" max="2200" placeholder="2026">
 
+<label for="imdbRating">⭐ IMDb Rating (0–10)</label>
+<input id="imdbRating" type="number" min="0" max="10" step="0.1" placeholder="e.g. 8.5">
+<p class="hint">Optional. Enter the movie or series IMDb rating, from 0 to 10.</p>
+
 <label for="poster">Poster Image URL</label>
 <input id="poster" type="url" placeholder="https://image.tmdb.org/t/p/w500/...">
 <img id="addPreview" class="preview" alt="Poster preview" hidden>
@@ -92,7 +98,7 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 <section class="panel">
 <h2>📚 Manage Catalog</h2>
 <label for="search">🔎 Search titles</label>
-<input id="search" type="search" placeholder="Search movie, series or anime">
+<input id="search" type="search" placeholder="Search title, category, year or rating">
 <button id="refresh" class="secondary full" type="button">🔄 Refresh Catalog</button>
 <div id="listMessage" class="message">Loading catalog...</div>
 <div id="titleList"></div>
@@ -113,6 +119,10 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 
 <label for="editYear">Release Year</label>
 <input id="editYear" type="number" min="1888" max="2200">
+
+<label for="editImdbRating">⭐ IMDb Rating (0–10)</label>
+<input id="editImdbRating" type="number" min="0" max="10" step="0.1" placeholder="e.g. 8.5">
+<p class="hint">Optional. Leave blank if no rating is available.</p>
 
 <label for="editPoster">Poster Image URL</label>
 <input id="editPoster" type="url">
@@ -197,102 +207,192 @@ function password(){
   return p;
 }
 function msg(id,text,type="ok"){
-  const el=$(id);el.textContent=text;
+  const el=$(id);
+  el.textContent=text;
   el.className="message"+(type==="error"?" error":type==="info"?"":" ok");
 }
 function urlValue(v){
   if(!v)return "";
-  try{const u=new URL(v);return ["https:","http:"].includes(u.protocol)?u.href:"";}
-  catch{return "";}
+  try{
+    const u=new URL(v);
+    return ["https:","http:"].includes(u.protocol)?u.href:"";
+  }catch{return "";}
 }
-async function api(path,options={}){
-  const headers={...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})};
-  const r=await fetch(API+path,{...options,headers});
-  let data;
-  try{data=await r.json();}catch{throw new Error("Invalid server response.");}
-  if(!r.ok)throw new Error(data.error||"Request failed: "+r.status);
-  return data;
+function api(path,options={}){
+  const headers={
+    ...(options.body?{"Content-Type":"application/json"}:{}),
+    ...(options.headers||{})
+  };
+  return fetch(API+path,{...options,headers}).then(async r=>{
+    let data;
+    try{data=await r.json();}catch{throw new Error("Invalid server response.");}
+    if(!r.ok)throw new Error(data.error||"Request failed: "+r.status);
+    return data;
+  });
 }
 function adminOptions(method,body){
   const p=password();
   if(!p)return null;
-  return {method,headers:{"X-Admin-Password":p},...(body===undefined?{}:{body:JSON.stringify(body)})};
+  return {
+    method,
+    headers:{"X-Admin-Password":p},
+    ...(body===undefined?{}:{body:JSON.stringify(body)})
+  };
+}
+function ratingValue(id){
+  const value=$(id).value.trim();
+  return value===""?null:Number(value);
 }
 function preview(inputId,imgId,msgId){
   const input=$(inputId),img=$(imgId),label=$(msgId);
   let seq=0;
   function update(){
     const n=++seq,u=urlValue(input.value.trim());
-    img.hidden=true;img.removeAttribute("src");
+    img.hidden=true;
+    img.removeAttribute("src");
     label.className="preview-msg";
-    if(!input.value.trim()){label.textContent="Enter a direct image URL.";return;}
-    if(!u){label.textContent="Invalid HTTP/HTTPS URL.";label.classList.add("error");return;}
+    if(!input.value.trim()){
+      label.textContent="Enter a direct image URL.";
+      return;
+    }
+    if(!u){
+      label.textContent="Invalid HTTP/HTTPS URL.";
+      label.classList.add("error");
+      return;
+    }
     label.textContent="Loading preview...";
-    img.onload=()=>{if(n!==seq)return;img.hidden=false;label.textContent="✅ Poster loaded.";label.classList.add("ok");};
-    img.onerror=()=>{if(n!==seq)return;label.textContent="❌ Image could not load. Use a direct image URL.";label.classList.add("error");};
+    img.onload=()=>{
+      if(n!==seq)return;
+      img.hidden=false;
+      label.textContent="✅ Poster loaded.";
+      label.classList.add("ok");
+    };
+    img.onerror=()=>{
+      if(n!==seq)return;
+      label.textContent="❌ Image could not load. Use a direct image URL.";
+      label.classList.add("error");
+    };
     img.src=u;
   }
-  input.addEventListener("input",update);return update;
+  input.addEventListener("input",update);
+  return update;
 }
 const updateAddPreview=preview("poster","addPreview","addPreviewMsg");
 const updateEditPreview=preview("editPoster","editPreview","editPreviewMsg");
 
 function poster(url){
   const u=urlValue(url);
-  if(!u){const d=document.createElement("div");d.className="thumb";d.textContent="🎬";return d;}
-  const i=document.createElement("img");i.className="thumb";i.loading="lazy";i.alt="Poster";i.src=u;
-  i.onerror=()=>{i.removeAttribute("src");i.alt="Poster unavailable";};
+  if(!u){
+    const d=document.createElement("div");
+    d.className="thumb";
+    d.textContent="🎬";
+    return d;
+  }
+  const i=document.createElement("img");
+  i.className="thumb";
+  i.loading="lazy";
+  i.alt="Poster";
+  i.src=u;
+  i.onerror=()=>{
+    i.removeAttribute("src");
+    i.alt="Poster unavailable";
+  };
   return i;
 }
 function button(text,cls,fn){
-  const b=document.createElement("button");b.type="button";b.textContent=text;
-  if(cls)b.className=cls;b.addEventListener("click",fn);return b;
+  const b=document.createElement("button");
+  b.type="button";
+  b.textContent=text;
+  if(cls)b.className=cls;
+  b.addEventListener("click",fn);
+  return b;
 }
 function card(title,detail){
-  const d=document.createElement("div");d.className="card";
-  const h=document.createElement("div");h.textContent=title;h.style.fontWeight="bold";
-  const p=document.createElement("div");p.className="meta";p.textContent=detail||"";
-  d.append(h,p);return d;
+  const d=document.createElement("div");
+  d.className="card";
+  const h=document.createElement("div");
+  h.textContent=title;
+  h.style.fontWeight="bold";
+  const p=document.createElement("div");
+  p.className="meta";
+  p.textContent=detail||"";
+  d.append(h,p);
+  return d;
 }
 function renderTitles(){
   const q=$("search").value.toLowerCase().trim();
-  const list=$("titleList");list.replaceChildren();
+  const list=$("titleList");
+  list.replaceChildren();
+
   const filtered=titles.filter(t=>
-    [t.title,t.category,t.year].some(v=>String(v||"").toLowerCase().includes(q))
+    [t.title,t.category,t.year,t.imdb_rating].some(v=>
+      String(v??"").toLowerCase().includes(q)
+    )
   );
+
   if(!filtered.length){
-    const p=document.createElement("p");p.className="hint";
+    const p=document.createElement("p");
+    p.className="hint";
     p.textContent=titles.length?"No matching titles found.":"No titles found.";
-    list.append(p);return;
+    list.append(p);
+    return;
   }
+
   filtered.forEach(t=>{
-    const c=document.createElement("article");c.className="card title-card";
+    const c=document.createElement("article");
+    c.className="card title-card";
     c.append(poster(t.poster_url));
+
     const right=document.createElement("div");
-    const name=document.createElement("div");name.textContent=t.title;name.style.fontWeight="bold";
-    const meta=document.createElement("p");meta.className="meta";
-    meta.textContent=(t.category||"")+(t.year?" • "+t.year:"")+
-      (t.category==="Movie"?" • "+(t.quality||"WEB-DL"):"")+" • ID "+t.id;
-    const actions=document.createElement("div");actions.className="actions";
+    const name=document.createElement("div");
+    name.textContent=t.title;
+    name.style.fontWeight="bold";
+
+    const meta=document.createElement("p");
+    meta.className="meta";
+    meta.textContent=(t.category||"")+
+      (t.year?" • "+t.year:"")+
+      (t.category==="Movie"?" • "+(t.quality||"WEB-DL"):"")+
+      " • ID "+t.id;
+
+    if(t.imdb_rating!==null&&t.imdb_rating!==undefined&&t.imdb_rating!==""){
+      const rating=document.createElement("p");
+      rating.className="meta imdb-rating";
+      rating.textContent="⭐ IMDb "+Number(t.imdb_rating).toFixed(1)+"/10";
+      right.append(name,meta,rating);
+    }else{
+      right.append(name,meta);
+    }
+
+    const actions=document.createElement("div");
+    actions.className="actions";
     actions.append(
       button("✏️ Edit","",()=>openEdit(t)),
       button("🗑️ Delete","danger",()=>deleteTitle(t))
     );
+
     if(["TV Series","Anime"].includes(t.category)){
       actions.append(button("📺 Manage Seasons","green",()=>openSeasons(t)));
     }
-    right.append(name,meta,actions);c.append(right);list.append(c);
+
+    right.append(actions);
+    c.append(right);
+    list.append(c);
   });
 }
 async function loadTitles(){
-  $("refresh").disabled=true;msg("listMessage","Loading catalog...","info");
+  $("refresh").disabled=true;
+  msg("listMessage","Loading catalog...","info");
   try{
     const data=await api("/titles");
     titles=Array.isArray(data)?data:[];
     msg("listMessage","Total titles: "+titles.length,"info");
     renderTitles();
-  }catch(e){msg("listMessage","Could not load catalog: "+e.message,"error");}
-  finally{$("refresh").disabled=false;}
+  }catch(e){
+    msg("listMessage","Could not load catalog: "+e.message,"error");
+  }finally{
+    $("refresh").disabled=false;
+  }
 }
 function openEdit(t){
   if(!password())return;
@@ -301,7 +401,8 @@ function openEdit(t){
   $("editTitle").value=t.title||"";
   $("editCategory").value=t.category||"Movie";
   $("editQuality").value=t.quality||"WEB-DL";
-  $("editYear").value=t.year||"";
+  $("editYear").value=t.year??"";
+  $("editImdbRating").value=t.imdb_rating??"";
   $("editPoster").value=t.poster_url||"";
   $("editWatch").value=t.watch_url||"";
   $("editDownload").value=t.download_url||"";
@@ -316,58 +417,108 @@ async function deleteTitle(t){
   if(!confirm('Delete "'+t.title+'", including its seasons and episodes?'))return;
   try{
     await api("/titles/"+t.id,opts);
-    if(editingId===t.id){editingId=null;$("editPanel").hidden=true;}
+    if(editingId===t.id){
+      editingId=null;
+      $("editPanel").hidden=true;
+    }
     if(activeTitle&&activeTitle.id===t.id){
-      $("seriesPanel").hidden=true;$("episodePanel").hidden=true;
+      $("seriesPanel").hidden=true;
+      $("episodePanel").hidden=true;
+      activeTitle=null;
+      activeSeason=null;
     }
     msg("listMessage","Title and its seasons/episodes deleted.");
     await loadTitles();
-  }catch(e){msg("listMessage",e.message,"error");}
+  }catch(e){
+    msg("listMessage",e.message,"error");
+  }
 }
 $("addForm").addEventListener("submit",async e=>{
   e.preventDefault();
+
+  const rating=ratingValue("imdbRating");
+  if(rating!==null&&(!Number.isFinite(rating)||rating<0||rating>10)){
+    msg("addMessage","IMDb rating must be between 0 and 10.","error");
+    return;
+  }
+
   const opts=adminOptions("POST",{
-    title:$("title").value.trim(),category:$("category").value,
-    quality:$("quality").value,year:$("year").value||null,
+    title:$("title").value.trim(),
+    category:$("category").value,
+    quality:$("quality").value,
+    year:$("year").value||null,
+    imdb_rating:rating,
     poster_url:$("poster").value.trim()||null,
     watch_url:$("watch").value.trim()||null,
     download_url:$("download").value.trim()||null
   });
   if(!opts)return;
-  $("addButton").disabled=true;msg("addMessage","Adding title...","info");
+
+  $("addButton").disabled=true;
+  msg("addMessage","Adding title...","info");
+
   try{
-    await api("/titles",opts);$("addForm").reset();
-    $("addPreview").hidden=true;$("addPreview").removeAttribute("src");
+    await api("/titles",opts);
+    $("addForm").reset();
+    $("addPreview").hidden=true;
+    $("addPreview").removeAttribute("src");
     $("addPreviewMsg").textContent="Enter a direct image URL.";
-    msg("addMessage","✅ Title added.");await loadTitles();
-  }catch(err){msg("addMessage",err.message,"error");}
-  finally{$("addButton").disabled=false;}
+    msg("addMessage","✅ Title added.");
+    await loadTitles();
+  }catch(err){
+    msg("addMessage",err.message,"error");
+  }finally{
+    $("addButton").disabled=false;
+  }
 });
 $("editForm").addEventListener("submit",async e=>{
-  e.preventDefault();if(editingId===null)return;
+  e.preventDefault();
+  if(editingId===null)return;
+
+  const rating=ratingValue("editImdbRating");
+  if(rating!==null&&(!Number.isFinite(rating)||rating<0||rating>10)){
+    msg("editMessage","IMDb rating must be between 0 and 10.","error");
+    return;
+  }
+
   const opts=adminOptions("PUT",{
-    title:$("editTitle").value.trim(),category:$("editCategory").value,
-    quality:$("editQuality").value,year:$("editYear").value||null,
+    title:$("editTitle").value.trim(),
+    category:$("editCategory").value,
+    quality:$("editQuality").value,
+    year:$("editYear").value||null,
+    imdb_rating:rating,
     poster_url:$("editPoster").value.trim()||null,
     watch_url:$("editWatch").value.trim()||null,
     download_url:$("editDownload").value.trim()||null
   });
   if(!opts)return;
-  $("saveEdit").disabled=true;msg("editMessage","Saving...","info");
+
+  $("saveEdit").disabled=true;
+  msg("editMessage","Saving...","info");
+
   try{
     await api("/titles/"+editingId,opts);
-    msg("editMessage","✅ Title updated.");await loadTitles();
-  }catch(err){msg("editMessage",err.message,"error");}
-  finally{$("saveEdit").disabled=false;}
+    msg("editMessage","✅ Title updated.");
+    await loadTitles();
+  }catch(err){
+    msg("editMessage",err.message,"error");
+  }finally{
+    $("saveEdit").disabled=false;
+  }
 });
-$("cancelEdit").addEventListener("click",()=>{$("editPanel").hidden=true;editingId=null;});
+$("cancelEdit").addEventListener("click",()=>{
+  $("editPanel").hidden=true;
+  editingId=null;
+});
 $("search").addEventListener("input",renderTitles);
 $("refresh").addEventListener("click",loadTitles);
 
 async function openSeasons(t){
   if(!password())return;
-  activeTitle=t;activeSeason=null;
-  $("seriesPanel").hidden=false;$("episodePanel").hidden=true;
+  activeTitle=t;
+  activeSeason=null;
+  $("seriesPanel").hidden=false;
+  $("episodePanel").hidden=true;
   $("seriesHeading").textContent=t.title+" • "+t.category;
   $("seasonList").replaceChildren();
   msg("seriesMessage","Loading seasons...","info");
@@ -379,57 +530,84 @@ async function loadSeasons(){
   try{
     const data=await api("/titles/"+activeTitle.id+"/seasons");
     seasons=Array.isArray(data)?data:[];
-    renderSeasons();msg("seriesMessage","Total seasons: "+seasons.length,"info");
-  }catch(e){msg("seriesMessage",e.message,"error");}
+    renderSeasons();
+    msg("seriesMessage","Total seasons: "+seasons.length,"info");
+  }catch(e){
+    msg("seriesMessage",e.message,"error");
+  }
 }
 function renderSeasons(){
-  const list=$("seasonList");list.replaceChildren();
+  const list=$("seasonList");
+  list.replaceChildren();
   seasons.forEach(s=>{
-    const c=document.createElement("div");c.className="season-card";
-    const h=document.createElement("h3");h.textContent="Season "+s.season_number;
-    const actions=document.createElement("div");actions.className="actions";
+    const c=document.createElement("div");
+    c.className="season-card";
+    const h=document.createElement("h3");
+    h.textContent="Season "+s.season_number;
+    const actions=document.createElement("div");
+    actions.className="actions";
     actions.append(
       button("🎞️ Manage Episodes","green",()=>openEpisodes(s)),
       button("✏️ Rename Season","secondary",()=>editSeason(s)),
       button("🗑️ Delete Season","danger",()=>deleteSeason(s))
     );
-    c.append(h,actions);list.append(c);
+    c.append(h,actions);
+    list.append(c);
   });
 }
 $("seasonForm").addEventListener("submit",async e=>{
-  e.preventDefault();if(!activeTitle)return;
+  e.preventDefault();
+  if(!activeTitle)return;
   const opts=adminOptions("POST",{season_number:$("seasonNumber").value});
   if(!opts)return;
   try{
     await api("/titles/"+activeTitle.id+"/seasons",opts);
-    $("seasonNumber").value="";msg("seasonMessage","✅ Season added.");
+    $("seasonNumber").value="";
+    msg("seasonMessage","✅ Season added.");
     await loadSeasons();
-  }catch(err){msg("seasonMessage",err.message,"error");}
+  }catch(err){
+    msg("seasonMessage",err.message,"error");
+  }
 });
 async function editSeason(s){
   const n=prompt("Enter new season number:",s.season_number);
   if(n===null)return;
-  if(!/^\d+$/.test(n)||Number(n)<1){alert("Enter a valid season number.");return;}
-  const opts=adminOptions("PUT",{season_number:Number(n)});if(!opts)return;
+  if(!/^\d+$/.test(n)||Number(n)<1){
+    alert("Enter a valid season number.");
+    return;
+  }
+  const opts=adminOptions("PUT",{season_number:Number(n)});
+  if(!opts)return;
   try{
     await api("/seasons/"+s.id,opts);
-    msg("seriesMessage","Season updated.");await loadSeasons();
-  }catch(e){msg("seriesMessage",e.message,"error");}
+    msg("seriesMessage","Season updated.");
+    await loadSeasons();
+  }catch(e){
+    msg("seriesMessage",e.message,"error");
+  }
 }
 async function deleteSeason(s){
-  const opts=adminOptions("DELETE");if(!opts)return;
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
   if(!confirm("Delete Season "+s.season_number+" and all its episodes?"))return;
   try{
     await api("/seasons/"+s.id,opts);
-    if(activeSeason&&activeSeason.id===s.id){$("episodePanel").hidden=true;activeSeason=null;}
-    msg("seriesMessage","Season and episodes deleted.");await loadSeasons();
-  }catch(e){msg("seriesMessage",e.message,"error");}
+    if(activeSeason&&activeSeason.id===s.id){
+      $("episodePanel").hidden=true;
+      activeSeason=null;
+    }
+    msg("seriesMessage","Season and episodes deleted.");
+    await loadSeasons();
+  }catch(e){
+    msg("seriesMessage",e.message,"error");
+  }
 }
 async function openEpisodes(s){
   activeSeason=s;
   $("episodePanel").hidden=false;
   $("episodeHeading").textContent=activeTitle.title+" • Season "+s.season_number;
-  resetEpisodeForm();$("episodeList").replaceChildren();
+  resetEpisodeForm();
+  $("episodeList").replaceChildren();
   $("episodePanel").scrollIntoView({behavior:"smooth"});
   await loadEpisodes();
 }
@@ -439,27 +617,41 @@ async function loadEpisodes(){
     const data=await api("/seasons/"+activeSeason.id+"/episodes");
     episodes=Array.isArray(data)?data:[];
     renderEpisodes();
-  }catch(e){msg("episodeMessage",e.message,"error");}
+  }catch(e){
+    msg("episodeMessage",e.message,"error");
+  }
 }
 function renderEpisodes(){
-  const list=$("episodeList");list.replaceChildren();
+  const list=$("episodeList");
+  list.replaceChildren();
   if(!episodes.length){
-    const p=document.createElement("p");p.className="hint";p.textContent="No episodes added yet.";
-    list.append(p);return;
+    const p=document.createElement("p");
+    p.className="hint";
+    p.textContent="No episodes added yet.";
+    list.append(p);
+    return;
   }
   episodes.forEach(ep=>{
-    const c=document.createElement("div");c.className="episode";
+    const c=document.createElement("div");
+    c.className="episode";
     const h=document.createElement("strong");
     h.textContent="Episode "+ep.episode_number+(ep.title?" — "+ep.title:"");
-    const m=document.createElement("p");m.className="meta";
+    const m=document.createElement("p");
+    m.className="meta";
     m.textContent="Watch: "+(ep.watch_url||"Not set")+" | Download: "+(ep.download_url||"Not set");
-    const a=document.createElement("div");a.className="actions";
-    a.append(button("✏️ Edit","",()=>editEpisode(ep)),button("🗑️ Delete","danger",()=>deleteEpisode(ep)));
-    c.append(h,m,a);list.append(c);
+    const a=document.createElement("div");
+    a.className="actions";
+    a.append(
+      button("✏️ Edit","",()=>editEpisode(ep)),
+      button("🗑️ Delete","danger",()=>deleteEpisode(ep))
+    );
+    c.append(h,m,a);
+    list.append(c);
   });
 }
 function resetEpisodeForm(){
-  $("episodeId").value="";$("episodeForm").reset();
+  $("episodeId").value="";
+  $("episodeForm").reset();
   $("episodeSave").textContent="➕ Add Episode";
   msg("episodeMessage","","info");
 }
@@ -475,7 +667,8 @@ function editEpisode(ep){
 }
 $("episodeCancel").addEventListener("click",resetEpisodeForm);
 $("episodeForm").addEventListener("submit",async e=>{
-  e.preventDefault();if(!activeSeason)return;
+  e.preventDefault();
+  if(!activeSeason)return;
   const id=$("episodeId").value;
   const body={
     episode_number:$("episodeNumber").value,
@@ -483,23 +676,31 @@ $("episodeForm").addEventListener("submit",async e=>{
     watch_url:$("episodeWatch").value.trim()||null,
     download_url:$("episodeDownload").value.trim()||null
   };
-  const opts=adminOptions(id?"PUT":"POST",body);if(!opts)return;
+  const opts=adminOptions(id?"PUT":"POST",body);
+  if(!opts)return;
   try{
     if(id)await api("/episodes/"+id,opts);
     else await api("/seasons/"+activeSeason.id+"/episodes",opts);
-    resetEpisodeForm();msg("episodeMessage",id?"Episode updated.":"Episode added.");
+    resetEpisodeForm();
+    msg("episodeMessage",id?"Episode updated.":"Episode added.");
     await loadEpisodes();
-  }catch(err){msg("episodeMessage",err.message,"error");}
+  }catch(err){
+    msg("episodeMessage",err.message,"error");
+  }
 });
 async function deleteEpisode(ep){
-  const opts=adminOptions("DELETE");if(!opts)return;
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
   if(!confirm("Delete Episode "+ep.episode_number+"?"))return;
   try{
     await api("/episodes/"+ep.id,opts);
-    msg("episodeMessage","Episode deleted.");await loadEpisodes();
-  }catch(e){msg("episodeMessage",e.message,"error");}
+    msg("episodeMessage","Episode deleted.");
+    await loadEpisodes();
+  }catch(e){
+    msg("episodeMessage",e.message,"error");
+  }
 }
 loadTitles();
 </script>
 </body>
- </html>
+</html>
