@@ -26,6 +26,8 @@ h2{margin:0 0 16px}
 button{font-family:inherit}
 .filters button,.secondary-btn{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
 .filters button.active{background:var(--blue)}
+.ad-slot{width:100%;max-width:100%;margin:24px auto 28px;text-align:center;overflow:hidden}
+.ad-label{margin:0 0 8px;color:#7f8ca3;font-size:10px;letter-spacing:1px;text-transform:uppercase}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
 .card{background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line);min-width:0;transition:transform .2s,border-color .2s}
 .card:hover{transform:translateY(-3px);border-color:var(--blue)}
@@ -113,6 +115,15 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
       <button type="button" data-cat="TV Series">TV Series</button>
       <button type="button" data-cat="Anime">Anime</button>
     </div>
+
+    <!-- Adsterra Native Banner -->
+    <div class="ad-slot" aria-label="Advertisement">
+      <p class="ad-label">Advertisement</p>
+      <script async="async" data-cfasync="false" src="https://bancadeltempoidea.org/21/31a9cb316c484308f95d99ad4fd50de3"></script>
+      <div id="container-31a9cb316c484308f95d99ad4fd50de3"></div>
+    </div>
+    <!-- End Adsterra Native Banner -->
+
     <p id="status" role="status">Loading catalog...</p>
     <div class="grid" id="grid"></div>
     <p id="empty" hidden>No titles found. Try another search.</p>
@@ -642,4 +653,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
- </html>
+</html>
