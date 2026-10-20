@@ -138,6 +138,9 @@ let titles = [];
 let category = "All";
 let routeToken = 0;
 
+// Always use the verified API host, even if the site is opened on www or another alias.
+const API_BASE_URL = "https://kaiflix.bond";
+
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
 const status = document.getElementById("status");
@@ -181,7 +184,7 @@ function makeImdbRating(value, detailed = false) {
 
 /* More descriptive API errors help diagnose title/season failures. */
 async function api(path) {
-  const requestUrl = new URL(path, window.location.origin);
+  const requestUrl = new URL(path, API_BASE_URL);
   let response;
   try {
     response = await fetch(requestUrl.href, {
@@ -390,9 +393,20 @@ async function openTitle(id) {
     /* Load title first: a seasons response should not hide valid title details. */
     const titleData = await api("/api/titles/" + encodeURIComponent(id));
     if (token !== routeToken) return;
-    const t = titleData && titleData.title ? titleData.title : titleData;
-    if (!t || t.id === undefined || t.id === null) {
-      throw new Error("Title endpoint returned no valid title object.");
+    // Accept either a direct title object or common API wrappers.
+    const t = titleData && titleData.title && typeof titleData.title === "object"
+      ? titleData.title
+      : titleData && titleData.data && typeof titleData.data === "object"
+        ? titleData.data
+        : titleData;
+    if (!t || typeof t !== "object" || Array.isArray(t) ||
+        (t.id === undefined && t.id !== 0) || !t.title) {
+      console.error("KaiFlix unexpected title API payload:", {
+        requestedId: id,
+        apiUrl: API_BASE_URL + "/api/titles/" + encodeURIComponent(id),
+        payload: titleData
+      });
+      throw new Error("Unexpected title response from " + API_BASE_URL + ". Open /api/titles/" + encodeURIComponent(id) + " and check the JSON.");
     }
 
     let seasons = [];
