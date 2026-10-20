@@ -68,7 +68,7 @@ button{font-family:inherit}
 .episode-actions{display:flex;gap:8px;flex-wrap:wrap}
 .episode-actions a{padding:9px 12px;border-radius:7px;background:var(--blue);color:#fff;text-decoration:none;font-size:12px;white-space:nowrap}
 .back-btn{display:inline-block;margin-bottom:18px;border:1px solid #34435b;background:#111827;color:white;padding:10px 14px;border-radius:8px;cursor:pointer}
-#detailStatus{color:var(--muted);line-height:1.6}
+#detailStatus{color:var(--muted);line-height:1.6;overflow-wrap:anywhere}
 .hidden{display:none!important}
 footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--line);font-size:13px}
 @media(max-width:600px){
@@ -89,7 +89,6 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo" id="logo">KaiFlix 🎬</div>
   <nav>
@@ -99,13 +98,11 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
     <a href="#catalog" data-nav-cat="Anime">Anime</a>
   </nav>
 </header>
-
 <section class="hero" id="hero">
   <h1>Unlimited Stories.<br>One Destination.</h1>
   <p>Discover Movies, TV Series &amp; Anime.</p>
   <input class="search" id="search" type="search" placeholder="Search your favourite title..." aria-label="Search titles">
 </section>
-
 <main>
   <section id="catalog">
     <h2>Explore Catalog</h2>
@@ -115,7 +112,6 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
       <button type="button" data-cat="TV Series">TV Series</button>
       <button type="button" data-cat="Anime">Anime</button>
     </div>
-
     <!-- Adsterra Native Banner -->
     <div class="ad-slot" aria-label="Advertisement">
       <p class="ad-label">Advertisement</p>
@@ -123,12 +119,10 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
       <div id="container-31a9cb316c484308f95d99ad4fd50de3"></div>
     </div>
     <!-- End Adsterra Native Banner -->
-
     <p id="status" role="status">Loading catalog...</p>
     <div class="grid" id="grid"></div>
     <p id="empty" hidden>No titles found. Try another search.</p>
   </section>
-
   <section id="detail">
     <div class="breadcrumb" id="breadcrumb"></div>
     <button type="button" class="back-btn" id="backBtn">← Back to Catalog</button>
@@ -136,15 +130,12 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
     <div id="detailContent"></div>
   </section>
 </main>
-
 <footer>© 2026 KaiFlix · Your entertainment hub</footer>
-
 <script>
 "use strict";
 
 let titles = [];
 let category = "All";
-let detailReturnCategory = "All";
 let routeToken = 0;
 
 const grid = document.getElementById("grid");
@@ -161,7 +152,7 @@ const hero = document.getElementById("hero");
 function safeUrl(value) {
   if (!value) return "";
   try {
-    const u = new URL(value);
+    const u = new URL(value, window.location.origin);
     return ["http:", "https:"].includes(u.protocol) ? u.href : "";
   } catch {
     return "";
@@ -171,35 +162,58 @@ function safeUrl(value) {
 function validImdbRating(value) {
   if (value === null || value === undefined || value === "") return null;
   const rating = Number(value);
-  return Number.isFinite(rating) && rating >= 0 && rating <= 10
-    ? rating
-    : null;
+  return Number.isFinite(rating) && rating >= 0 && rating <= 10 ? rating : null;
 }
 
 function makeImdbRating(value, detailed = false) {
   const rating = validImdbRating(value);
   if (rating === null) return null;
-
   const badge = document.createElement(detailed ? "div" : "p");
   badge.className = detailed ? "detail-rating" : "imdb-rating";
-
   const star = document.createElement("span");
   star.className = "imdb-star";
   star.textContent = "★";
-
   const text = document.createElement("span");
   text.textContent = "IMDb " + rating.toFixed(1) + "/10";
-
   badge.append(star, text);
   return badge;
 }
 
+/* More descriptive API errors help diagnose title/season failures. */
 async function api(path) {
-  const response = await fetch(path, {
-    headers: { "Accept": "application/json" }
-  });
-  if (!response.ok) throw new Error("Request failed (" + response.status + ")");
-  return response.json();
+  const requestUrl = new URL(path, window.location.origin);
+  let response;
+  try {
+    response = await fetch(requestUrl.href, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+  } catch (error) {
+    console.error("KaiFlix network error:", requestUrl.href, error);
+    throw new Error("Network error while requesting " + requestUrl.pathname);
+  }
+
+  if (!response.ok) {
+    throw new Error(requestUrl.pathname + " returned HTTP " + response.status);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const body = await response.text();
+
+  if (!body.trim()) {
+    throw new Error(requestUrl.pathname + " returned an empty response");
+  }
+
+  let data;
+  try {
+    data = JSON.parse(body);
+  } catch (error) {
+    console.error("KaiFlix invalid JSON response:", requestUrl.href, body.slice(0, 250), error);
+    throw new Error(requestUrl.pathname + " did not return valid JSON" +
+      (contentType ? " (Content-Type: " + contentType + ")" : ""));
+  }
+  return data;
 }
 
 function getRows(data, key) {
@@ -222,12 +236,10 @@ function makeLink(url, label, className) {
 function makePoster(url, title) {
   const box = document.createElement("div");
   box.className = "poster";
-
   const fallback = document.createElement("div");
   fallback.className = "poster-fallback";
   fallback.textContent = "🎬 Poster unavailable";
   box.appendChild(fallback);
-
   const poster = safeUrl(url);
   if (poster) {
     const img = document.createElement("img");
@@ -255,31 +267,22 @@ function setCategory(value) {
 
 function render() {
   const q = search.value.toLowerCase().trim();
-
   const items = titles.filter(t => {
     const matchesCategory = category === "All" || t.category === category;
     const rating = validImdbRating(t.imdb_rating);
-    const searchable = [
-      t.title,
-      t.category,
-      t.year,
-      t.quality,
-      rating === null ? "" : rating.toFixed(1)
-    ].some(value => String(value ?? "").toLowerCase().includes(q));
-
+    const searchable = [t.title, t.category, t.year, t.quality,
+      rating === null ? "" : rating.toFixed(1)]
+      .some(value => String(value ?? "").toLowerCase().includes(q));
     return matchesCategory && searchable;
   });
 
   grid.replaceChildren();
-
   for (const t of items) {
     const card = document.createElement("article");
     card.className = "card";
-
     const poster = makePoster(t.poster_url, t.title);
     const info = document.createElement("div");
     info.className = "info";
-
     const title = document.createElement("h3");
     title.textContent = t.title || "Untitled";
     info.appendChild(title);
@@ -291,7 +294,7 @@ function render() {
       const quality = document.createElement("span");
       const isHall = String(t.quality || "WEB-DL").toUpperCase() === "HALL PRINT";
       quality.className = "quality" + (isHall ? " hall" : "");
-      quality.textContent = isHall ? "HALL PRINT" : "WEB-DL";
+      quality.textContent = isHall ? "HALL PRINT" : (t.quality || "WEB-DL");
       info.appendChild(quality);
     } else {
       const type = document.createElement("span");
@@ -301,16 +304,12 @@ function render() {
     }
 
     const meta = document.createElement("p");
-    meta.textContent = [
-      t.category || "Uncategorized",
-      t.year || "Year unknown"
-    ].join(" · ");
+    meta.textContent = [t.category || "Uncategorized", t.year || "Year unknown"].join(" · ");
     info.appendChild(meta);
 
     if (t.category === "Movie") {
       const watch = safeUrl(t.watch_url);
       if (watch) info.appendChild(makeLink(watch, "▶ Watch", "watch"));
-
       const download = safeUrl(t.download_url);
       if (download) info.appendChild(makeLink(download, "↓ Download", "download"));
     } else {
@@ -319,25 +318,20 @@ function render() {
       open.className = "action-btn";
       open.textContent = "View Details →";
       open.addEventListener("click", () => {
-        detailReturnCategory = category;
         location.hash = "title/" + encodeURIComponent(t.id);
       });
       info.appendChild(open);
-
       card.style.cursor = "pointer";
       card.addEventListener("click", event => {
         if (event.target.closest("a,button")) return;
-        detailReturnCategory = category;
         location.hash = "title/" + encodeURIComponent(t.id);
       });
     }
-
     card.append(poster, info);
     grid.appendChild(card);
   }
 
   empty.hidden = items.length > 0;
-
   if (!titles.length) status.textContent = "No titles in the catalog yet.";
   else status.textContent = items.length + " title(s) shown";
 }
@@ -392,63 +386,59 @@ function makeBackButton() {
 async function openTitle(id) {
   const token = ++routeToken;
   showDetailLoading("Loading title details...");
-
   try {
-    const [titleData, seasonsData] = await Promise.all([
-      api("/api/titles/" + encodeURIComponent(id)),
-      api("/api/titles/" + encodeURIComponent(id) + "/seasons")
-    ]);
+    /* Load title first: a seasons response should not hide valid title details. */
+    const titleData = await api("/api/titles/" + encodeURIComponent(id));
+    if (token !== routeToken) return;
+    const t = titleData && titleData.title ? titleData.title : titleData;
+    if (!t || t.id === undefined || t.id === null) {
+      throw new Error("Title endpoint returned no valid title object.");
+    }
 
+    let seasons = [];
+    let seasonLoadError = "";
+    try {
+      const seasonsData = await api("/api/titles/" + encodeURIComponent(id) + "/seasons");
+      seasons = getRows(seasonsData, "seasons")
+        .slice()
+        .sort((a, b) => Number(a.season_number || 0) - Number(b.season_number || 0));
+    } catch (error) {
+      seasonLoadError = error && error.message ? error.message : String(error);
+      console.error("KaiFlix seasons error:", error);
+    }
     if (token !== routeToken) return;
 
-    const t = titleData && titleData.title ? titleData.title : titleData;
-    if (!t || !t.id) throw new Error("Title not found.");
-
-    const seasons = getRows(seasonsData, "seasons")
-      .sort((a,b) => a.season_number - b.season_number);
-
     detailStatus.textContent = "";
-
     setBreadcrumb([
       { label: "Home", action: showCatalog },
-      {
-        label: t.category || "Catalog",
-        action: () => {
-          setCategory(t.category || "All");
-          showCatalog();
-        }
-      },
+      { label: t.category || "Catalog", action: () => {
+        setCategory(t.category || "All");
+        showCatalog();
+      }},
       { label: t.title || "Details" }
     ]);
 
     const layout = document.createElement("div");
     layout.className = "detail-layout";
-
     const poster = makePoster(t.poster_url, t.title);
     poster.className = "poster detail-poster";
     layout.appendChild(poster);
 
     const description = document.createElement("div");
     description.className = "detail-description";
-
     const heading = document.createElement("h1");
     heading.textContent = t.title || "Untitled";
     description.appendChild(heading);
 
     const meta = document.createElement("p");
-    meta.textContent = [
-      t.category,
-      t.year || "Year unknown"
-    ].filter(Boolean).join(" · ");
+    meta.textContent = [t.category, t.year || "Year unknown"].filter(Boolean).join(" · ");
     description.appendChild(meta);
-
     const rating = makeImdbRating(t.imdb_rating, true);
     if (rating) description.appendChild(rating);
 
     const intro = document.createElement("p");
     intro.textContent = "Choose a season below to explore episodes and their available Watch and Download links.";
     description.appendChild(intro);
-
     layout.appendChild(description);
     detailContent.appendChild(layout);
 
@@ -457,7 +447,12 @@ async function openTitle(id) {
     seasonHeading.textContent = "Seasons";
     detailContent.appendChild(seasonHeading);
 
-    if (!seasons.length) {
+    if (seasonLoadError) {
+      const warning = document.createElement("p");
+      warning.style.color = "var(--muted)";
+      warning.textContent = "Title loaded, but seasons could not be loaded: " + seasonLoadError;
+      detailContent.appendChild(warning);
+    } else if (!seasons.length) {
       const noSeasons = document.createElement("p");
       noSeasons.style.color = "var(--muted)";
       noSeasons.textContent = "No seasons added yet.";
@@ -465,30 +460,27 @@ async function openTitle(id) {
     } else {
       const seasonList = document.createElement("div");
       seasonList.className = "season-list";
-
       for (const season of seasons) {
+        if (!season || season.id === undefined || season.id === null) continue;
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "season-card";
-
         const name = document.createElement("strong");
-        name.textContent = "Season " + season.season_number;
-
+        name.textContent = "Season " + (season.season_number ?? "?");
         const sub = document.createElement("span");
         sub.textContent = "View episodes →";
-
         btn.append(name, sub);
         btn.addEventListener("click", () => {
           location.hash = "season/" + encodeURIComponent(season.id);
         });
         seasonList.appendChild(btn);
       }
-
       detailContent.appendChild(seasonList);
     }
   } catch (error) {
     if (token !== routeToken) return;
-    detailStatus.textContent = "Could not load this title. Please check the API and try again.";
+    const message = error && error.message ? error.message : String(error);
+    detailStatus.textContent = "Could not load this title: " + message;
     console.error("KaiFlix title error:", error);
   }
 }
@@ -496,43 +488,36 @@ async function openTitle(id) {
 async function openSeason(id) {
   const token = ++routeToken;
   showDetailLoading("Loading episodes...");
-
   try {
     const seasonData = await api("/api/seasons/" + encodeURIComponent(id));
     if (token !== routeToken) return;
-
-    const season = seasonData && seasonData.season
-      ? seasonData.season
-      : seasonData;
-
-    if (!season || !season.id) throw new Error("Season not found.");
+    const season = seasonData && seasonData.season ? seasonData.season : seasonData;
+    if (!season || season.id === undefined || season.id === null) {
+      throw new Error("Season endpoint returned no valid season object.");
+    }
 
     const [episodesData, titleData] = await Promise.all([
       api("/api/seasons/" + encodeURIComponent(id) + "/episodes"),
       api("/api/titles/" + encodeURIComponent(season.title_id))
     ]);
-
     if (token !== routeToken) return;
 
     const title = titleData && titleData.title ? titleData.title : titleData;
     const episodes = getRows(episodesData, "episodes")
-      .sort((a,b) => a.episode_number - b.episode_number);
+      .slice()
+      .sort((a, b) => Number(a.episode_number || 0) - Number(b.episode_number || 0));
 
     setBreadcrumb([
       { label: "Home", action: showCatalog },
-      {
-        label: title.title || "Series",
-        action: () => {
-          location.hash = "title/" + encodeURIComponent(season.title_id);
-        }
-      },
-      { label: "Season " + season.season_number }
+      { label: title.title || "Series", action: () => {
+        location.hash = "title/" + encodeURIComponent(season.title_id);
+      }},
+      { label: "Season " + (season.season_number ?? "?") }
     ]);
-
     detailStatus.textContent = "";
 
     const heading = document.createElement("h1");
-    heading.textContent = (title.title || "Series") + " — Season " + season.season_number;
+    heading.textContent = (title.title || "Series") + " — Season " + (season.season_number ?? "?");
     heading.style.fontSize = "clamp(24px,4vw,34px)";
     detailContent.appendChild(heading);
 
@@ -551,65 +536,58 @@ async function openSeason(id) {
 
     const list = document.createElement("div");
     list.className = "episode-list";
-
     for (const ep of episodes) {
       const card = document.createElement("article");
       card.className = "episode-card";
-
       const info = document.createElement("div");
       const epHeading = document.createElement("h3");
-      epHeading.textContent = "Episode " + ep.episode_number +
-        (ep.title ? " — " + ep.title : "");
-
+      epHeading.textContent = "Episode " + (ep.episode_number ?? "?") + (ep.title ? " — " + ep.title : "");
       const epMeta = document.createElement("p");
       epMeta.textContent = title.title || "KaiFlix episode";
-
       info.append(epHeading, epMeta);
       card.appendChild(info);
 
       const actions = document.createElement("div");
       actions.className = "episode-actions";
-
       const watch = safeUrl(ep.watch_url);
       const download = safeUrl(ep.download_url);
-
       if (watch) actions.appendChild(makeLink(watch, "▶ Watch", "watch"));
       if (download) actions.appendChild(makeLink(download, "↓ Download", "download"));
-
       if (!watch && !download) {
         const unavailable = document.createElement("span");
         unavailable.style.color = "var(--muted)";
         unavailable.textContent = "Links not available";
         actions.appendChild(unavailable);
       }
-
       card.appendChild(actions);
       list.appendChild(card);
     }
-
     detailContent.appendChild(list);
   } catch (error) {
     if (token !== routeToken) return;
-    detailStatus.textContent = "Could not load episodes. Please check the API and try again.";
+    const message = error && error.message ? error.message : String(error);
+    detailStatus.textContent = "Could not load episodes: " + message;
     console.error("KaiFlix season error:", error);
   }
 }
 
 function route() {
-  const hash = decodeURIComponent(location.hash || "#catalog");
-
+  let hash;
+  try {
+    hash = decodeURIComponent(location.hash || "#catalog");
+  } catch {
+    hash = location.hash || "#catalog";
+  }
   if (hash.startsWith("#title/")) {
     const id = hash.slice("#title/".length);
     if (id) openTitle(id);
     return;
   }
-
   if (hash.startsWith("#season/")) {
     const id = hash.slice("#season/".length);
     if (id) openSeason(id);
     return;
   }
-
   showCatalog();
 }
 
@@ -617,14 +595,10 @@ async function loadTitles() {
   try {
     const data = await api("/api/titles");
     titles = getRows(data, "titles");
-
-    status.textContent = titles.length
-      ? titles.length + " title(s) loaded"
-      : "No titles in the catalog yet.";
-
+    status.textContent = titles.length ? titles.length + " title(s) loaded" : "No titles in the catalog yet.";
     render();
   } catch (error) {
-    status.textContent = "Could not load catalog. Please try again later.";
+    status.textContent = "Could not load catalog: " + (error && error.message ? error.message : "Unknown error");
     console.error("KaiFlix catalog error:", error);
   }
 }
@@ -632,25 +606,18 @@ async function loadTitles() {
 document.querySelectorAll(".filters button").forEach(btn => {
   btn.addEventListener("click", () => setCategory(btn.dataset.cat));
 });
-
 document.querySelectorAll("[data-nav-cat]").forEach(link => {
   link.addEventListener("click", () => setCategory(link.dataset.navCat));
 });
-
 search.addEventListener("input", render);
-
 document.getElementById("logo").addEventListener("click", () => {
   location.hash = "catalog";
   showCatalog();
 });
-
 window.addEventListener("hashchange", route);
 makeBackButton();
 loadTitles();
-
-if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) {
-  route();
-}
+if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) route();
 </script>
 </body>
 </html>
