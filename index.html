@@ -3,126 +3,349 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080b14">
+<meta name="theme-color" content="#050810">
 <meta name="description" content="Discover Movies, TV Series and Anime on KaiFlix.">
-<title>KaiFlix | Movies, Series & Anime</title>
+<title>KaiFlix | Movies, Series &amp; Anime</title>
 <style>
-*{box-sizing:border-box}
-:root{--bg:#080b14;--panel:#111827;--line:#202b3d;--blue:#1685ff;--muted:#aebbd0}
-body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
-header{padding:18px 5%;background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
-.logo{font-size:27px;font-weight:bold;color:#42a5ff;cursor:pointer}
-nav{display:flex;gap:15px;flex-wrap:wrap}
-nav a{color:#ddd;text-decoration:none;font-size:14px}
-nav a:hover{color:#42a5ff}
-.hero{padding:45px 5%;background:linear-gradient(120deg,#102647,#080b14)}
-.hero h1{font-size:clamp(28px,5vw,40px);margin:0 0 12px;line-height:1.2}
-.hero p{color:#c4cede;line-height:1.6}
-.search{width:100%;max-width:500px;padding:14px;border-radius:9px;border:1px solid #34435b;background:var(--panel);color:white;font-size:16px;outline:none}
-.search:focus{border-color:var(--blue)}
-main{padding:24px 5%;min-height:45vh}
-h2{margin:0 0 16px}
-.filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 25px}
-button{font-family:inherit}
-.filters button,.secondary-btn{padding:10px 15px;border:0;border-radius:20px;background:#202b3d;color:white;cursor:pointer}
-.filters button.active{background:var(--blue)}
-.ad-slot{width:100%;max-width:100%;margin:24px auto 28px;text-align:center;overflow:hidden}
-.ad-label{margin:0 0 8px;color:#7f8ca3;font-size:10px;letter-spacing:1px;text-transform:uppercase}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:17px}
-.card{background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line);min-width:0;transition:transform .2s,border-color .2s}
-.card:hover{transform:translateY(-3px);border-color:var(--blue)}
-.poster{aspect-ratio:2/3;background:linear-gradient(145deg,#172b48,#101522);display:flex;align-items:center;justify-content:center;color:#a9bdd8;text-align:center;overflow:hidden;position:relative}
-.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.poster-fallback{padding:12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
-.info{padding:12px}
-.info h3{font-size:16px;margin:0 0 8px;overflow-wrap:anywhere;line-height:1.4}
-.info p{font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
-.info a,.action-btn{display:block;width:100%;text-align:center;background:var(--blue);color:white;text-decoration:none;padding:10px;border:0;border-radius:7px;margin-top:8px;font-size:13px;cursor:pointer}
-.info a:hover,.action-btn:hover{filter:brightness(1.12)}
-.info a.download,.episode-actions a.download{background:#26364e}
-.quality{display:inline-block;font-size:10px;font-weight:bold;letter-spacing:.3px;padding:5px 7px;border-radius:5px;margin:0 0 8px;background:#123d2b;color:#76f0ae}
-.quality.hall{background:#492d13;color:#ffd08a}
-.type-badge{display:inline-block;font-size:10px;padding:5px 7px;border-radius:5px;background:#202b3d;color:#b9d8ff;margin:0 0 8px}
-.imdb-rating{display:flex;align-items:center;gap:5px;color:#fbbf24!important;font-size:13px!important;font-weight:bold;margin:8px 0}
-.imdb-star{color:#fbbf24}
-#status{color:var(--muted);font-size:14px;line-height:1.5}
-#empty{padding:20px 0;color:var(--muted)}
-#detail{display:none}
-.breadcrumb{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px;color:var(--muted);font-size:13px}
-.breadcrumb button{border:0;background:none;color:#69b5ff;cursor:pointer;padding:0;font-size:13px}
-.detail-layout{display:grid;grid-template-columns:minmax(130px,220px) minmax(0,1fr);gap:25px;align-items:start}
-.detail-poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:12px;background:#172b48}
-.detail-description h1{font-size:clamp(25px,4vw,36px);margin:0 0 12px;overflow-wrap:anywhere}
-.detail-description p{color:#c4cede;line-height:1.7;font-size:14px}
-.detail-description .detail-rating{display:inline-flex;align-items:center;gap:7px;background:#202b3d;color:#fbbf24;padding:9px 12px;border-radius:8px;font-weight:bold;margin:4px 0 12px}
-.section-heading{margin:30px 0 15px}
-.season-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}
-.season-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;color:white;text-align:left}
-.season-card:hover{border-color:var(--blue)}
-.season-card strong{display:block;margin-bottom:8px}
-.season-card span{font-size:12px;color:var(--muted)}
-.episode-list{display:grid;gap:12px}
-.episode-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.episode-card h3{margin:0 0 6px;font-size:15px;overflow-wrap:anywhere}
-.episode-card p{margin:0;color:var(--muted);font-size:12px}
-.episode-actions{display:flex;gap:8px;flex-wrap:wrap}
-.episode-actions a{padding:9px 12px;border-radius:7px;background:var(--blue);color:#fff;text-decoration:none;font-size:12px;white-space:nowrap}
-.back-btn{display:inline-block;margin-bottom:18px;border:1px solid #34435b;background:#111827;color:white;padding:10px 14px;border-radius:8px;cursor:pointer}
-#detailStatus{color:var(--muted);line-height:1.6;overflow-wrap:anywhere}
-.hidden{display:none!important}
-footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--line);font-size:13px}
-@media(max-width:600px){
- header{padding:16px 4%}
- .logo{font-size:24px}
- nav{gap:10px}
- nav a{font-size:13px}
- .hero{padding:35px 4%}
- main{padding:22px 4%}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
- .poster{aspect-ratio:2/3}
- .detail-layout{grid-template-columns:105px minmax(0,1fr);gap:14px}
- .detail-description h1{font-size:23px}
- .episode-card{align-items:flex-start;flex-direction:column}
- .episode-actions{width:100%}
- .episode-actions a{flex:1;text-align:center}
+:root {
+  color-scheme: dark;
+  --bg:#050810;
+  --panel:#0c1220;
+  --panel2:#111b2d;
+  --line:#202d43;
+  --blue:#1685ff;
+  --blue2:#55b5ff;
+  --muted:#9aaac1;
+  --white:#f5f8ff;
+}
+* {box-sizing:border-box}
+html {scroll-behavior:smooth;scroll-padding-top:90px}
+body {
+  margin:0;background:var(--bg);color:var(--white);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  min-height:100vh;
+}
+a {color:inherit}
+button,input {font:inherit}
+button {color:inherit}
+header {
+  position:sticky;top:0;z-index:50;
+  padding:16px 5%;display:flex;align-items:center;
+  justify-content:space-between;gap:18px;flex-wrap:wrap;
+  background:rgba(5,8,16,.9);
+  border-bottom:1px solid rgba(100,155,220,.16);
+  backdrop-filter:blur(18px);
+}
+.logo {
+  font-size:27px;font-weight:900;letter-spacing:-1px;
+  color:#fff;cursor:pointer;white-space:nowrap;
+}
+.logo span {color:var(--blue2)}
+nav {display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+nav a {
+  color:#c2cde0;text-decoration:none;font-size:13px;
+  font-weight:650;padding:10px 13px;border-radius:9px;
+  transition:background .2s,color .2s;
+}
+nav a:hover,nav a:focus-visible {
+  color:#fff;background:#142744;outline:none;
+}
+.hero {
+  position:relative;isolation:isolate;overflow:hidden;
+  padding:clamp(52px,8vw,105px) 5% 55px;
+  background:
+    radial-gradient(ellipse at 78% 25%,rgba(0,112,255,.24),transparent 42%),
+    radial-gradient(ellipse at 8% 100%,rgba(0,63,150,.22),transparent 45%),
+    linear-gradient(115deg,#0c1930 0%,#070d1b 54%,#050810 100%);
+  border-bottom:1px solid rgba(90,145,220,.12);
+}
+.hero:after {
+  content:"";position:absolute;z-index:-1;right:-100px;top:-170px;
+  width:460px;height:460px;border-radius:50%;
+  border:1px solid rgba(65,150,255,.15);
+  box-shadow:0 0 0 45px rgba(50,125,240,.025),
+             0 0 0 90px rgba(50,125,240,.02);
+}
+.hero-kicker {
+  display:inline-flex;align-items:center;gap:8px;
+  color:#79bdff;font-size:11px;font-weight:850;
+  letter-spacing:2.4px;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.hero-kicker:before {
+  content:"";width:24px;height:2px;background:var(--blue);
+}
+.hero h1 {
+  max-width:760px;margin:0;
+  font-size:clamp(39px,7vw,76px);
+  line-height:1.04;letter-spacing:-2.8px;
+  font-weight:900;
+}
+.hero h1 span {
+  background:linear-gradient(90deg,#4ca8ff,#8bd8ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p {
+  max-width:580px;color:#aebed4;
+  font-size:clamp(14px,2vw,17px);line-height:1.8;
+  margin:20px 0 24px;
+}
+.hero-actions {display:flex;gap:11px;flex-wrap:wrap;margin-bottom:28px}
+.hero-primary,.hero-secondary {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:45px;padding:12px 18px;border-radius:9px;
+  text-decoration:none;font-size:13px;font-weight:800;
+  transition:transform .2s,filter .2s,border-color .2s;
+}
+.hero-primary {
+  color:white;background:linear-gradient(110deg,#0877ff,#279dff);
+  box-shadow:0 7px 28px rgba(0,111,255,.2);
+}
+.hero-secondary {
+  color:#e0edff;background:rgba(255,255,255,.045);
+  border:1px solid #30425d;
+}
+.hero-primary:hover,.hero-secondary:hover {transform:translateY(-2px);filter:brightness(1.12)}
+.search-wrap {max-width:550px;position:relative}
+.search-icon {
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:#8da5c4;pointer-events:none;font-size:18px;
+}
+.search {
+  width:100%;padding:15px 17px 15px 46px;
+  border-radius:11px;border:1px solid #2a3b56;
+  background:rgba(8,15,28,.8);color:#fff;font-size:14px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.search::placeholder {color:#8191aa}
+.search:focus {border-color:#248fff;box-shadow:0 0 0 3px rgba(22,133,255,.12)}
+main {padding:34px 5% 55px;min-height:45vh}
+.catalog-top {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;
+}
+h2 {margin:0;font-size:clamp(21px,3vw,27px);letter-spacing:-.5px}
+.section-subtitle {margin:7px 0 0;color:var(--muted);font-size:12px}
+.filters {display:flex;gap:8px;flex-wrap:wrap;margin:23px 0 25px}
+.filters button,.secondary-btn {
+  padding:10px 15px;border:1px solid #27354b;border-radius:9px;
+  background:#0b1220;color:#aebbd0;cursor:pointer;
+  font-size:12px;font-weight:750;transition:all .2s;
+}
+.filters button:hover,.filters button.active {
+  background:linear-gradient(110deg,#0877ff,#1767d2);
+  border-color:#288eff;color:white;
+  box-shadow:0 4px 18px rgba(0,112,255,.15);
+}
+.ad-slot {
+  width:100%;max-width:100%;margin:25px auto 30px;
+  text-align:center;overflow:hidden;
+}
+.ad-label {
+  margin:0 0 10px;color:#65748b;font-size:9px;
+  letter-spacing:1.8px;text-transform:uppercase;
+}
+#status {color:var(--muted);font-size:13px;line-height:1.6}
+#empty {padding:22px 0;color:var(--muted)}
+.grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:19px;
+}
+.card {
+  min-width:0;overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#111b2c,#0a101c);
+  border:1px solid #1c2a40;border-radius:12px;
+  transition:transform .22s,border-color .22s,box-shadow .22s;
+}
+.card:hover {
+  transform:translateY(-5px);border-color:#287fd7;
+  box-shadow:0 13px 32px rgba(0,0,0,.32),0 0 20px rgba(0,100,255,.07);
+}
+.poster {
+  position:relative;aspect-ratio:2/3;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#142945,#080d18);
+  color:#a9bdd8;text-align:center;
+}
+.poster img {
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;transition:transform .45s;
+}
+.card:hover .poster img {transform:scale(1.045)}
+.poster-fallback {padding:12px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.info {padding:13px}
+.info h3 {
+  font-size:14px;font-weight:800;line-height:1.45;
+  margin:0 0 8px;overflow-wrap:anywhere;
+}
+.info p {font-size:11px;color:var(--muted);line-height:1.6;overflow-wrap:anywhere}
+.info a,.action-btn {
+  display:block;width:100%;text-align:center;
+  background:linear-gradient(110deg,#0877ff,#1677df);
+  color:white;text-decoration:none;padding:10px 8px;
+  border:0;border-radius:7px;margin-top:8px;
+  font-size:12px;font-weight:800;cursor:pointer;
+  transition:filter .2s,transform .2s;
+}
+.info a:hover,.action-btn:hover {filter:brightness(1.15)}
+.info a.download,.episode-actions a.download {background:#1a2940;border:1px solid #2c405d}
+.quality,.type-badge {
+  display:inline-block;font-size:9px;font-weight:850;
+  letter-spacing:.5px;padding:5px 7px;border-radius:5px;margin:0 0 7px;
+}
+.quality {background:#103d32;color:#7ef0b8}
+.quality.hall {background:#493016;color:#ffd18a}
+.type-badge {background:#142a48;color:#9dceff}
+.imdb-rating {
+  display:flex;align-items:center;gap:5px;
+  color:#ffcb45!important;font-size:12px!important;
+  font-weight:850;margin:7px 0 9px;
+}
+.imdb-star {color:#ffcb45}
+#detail {display:none}
+.breadcrumb {
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  margin-bottom:20px;color:var(--muted);font-size:12px;
+}
+.breadcrumb button {
+  border:0;background:none;color:#73baff;cursor:pointer;padding:0;font-size:12px;
+}
+.breadcrumb button:hover {color:white}
+.detail-layout {
+  display:grid;grid-template-columns:minmax(145px,235px) minmax(0,1fr);
+  gap:27px;align-items:start;
+}
+.detail-poster {
+  width:100%;aspect-ratio:2/3;object-fit:cover;
+  border-radius:12px;background:#142945;border:1px solid var(--line);
+}
+.detail-description h1 {
+  font-size:clamp(25px,4vw,39px);line-height:1.15;
+  margin:0 0 12px;letter-spacing:-.8px;overflow-wrap:anywhere;
+}
+.detail-description p {color:#b2c0d5;line-height:1.8;font-size:13px}
+.detail-description .detail-rating {
+  display:inline-flex;align-items:center;gap:8px;
+  background:#111e31;color:#ffcb45;padding:9px 12px;
+  border:1px solid #263850;border-radius:8px;font-weight:850;margin:5px 0 12px;
+}
+.section-heading {margin:30px 0 15px}
+.season-list {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;
+}
+.season-card {
+  background:linear-gradient(145deg,#111c2e,#0a111e);
+  border:1px solid #23344c;border-radius:10px;padding:17px;
+  cursor:pointer;color:white;text-align:left;transition:all .2s;
+}
+.season-card:hover {border-color:var(--blue);transform:translateY(-2px)}
+.season-card strong {display:block;margin-bottom:8px;font-size:14px}
+.season-card span {font-size:11px;color:var(--muted)}
+.episode-list {display:grid;gap:12px}
+.episode-card {
+  background:linear-gradient(110deg,#101a2a,#0a111d);
+  border:1px solid #23334a;border-radius:10px;padding:16px;
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.episode-card h3 {margin:0 0 6px;font-size:14px;overflow-wrap:anywhere}
+.episode-card p {margin:0;color:var(--muted);font-size:11px}
+.episode-actions {display:flex;gap:8px;flex-wrap:wrap}
+.episode-actions a {
+  padding:10px 13px;border-radius:7px;background:#087bfa;
+  color:#fff;text-decoration:none;font-size:11px;font-weight:800;white-space:nowrap;
+}
+.back-btn {
+  display:inline-block;margin-bottom:18px;border:1px solid #30415b;
+  background:#101a2b;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;
+}
+.back-btn:hover {border-color:var(--blue)}
+#detailStatus {color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
+.hidden {display:none!important}
+footer {
+  text-align:center;padding:27px 5%;color:#75849b;
+  border-top:1px solid #1a2639;font-size:11px;
+  background:#070b13;
+}
+footer strong {color:#9ccfff}
+@media(min-width:1200px) {
+  .grid {grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:21px}
+}
+@media(max-width:600px) {
+  header {padding:13px 4%;gap:10px}
+  .logo {font-size:23px}
+  nav {gap:3px}
+  nav a {padding:9px 8px;font-size:11px}
+  .hero {padding:46px 4% 37px}
+  .hero h1 {letter-spacing:-1.6px}
+  .hero p {font-size:14px}
+  main {padding:26px 4% 40px}
+  .grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .info {padding:10px}
+  .info h3 {font-size:13px}
+  .detail-layout {grid-template-columns:105px minmax(0,1fr);gap:14px}
+  .detail-description h1 {font-size:22px}
+  .episode-card {align-items:flex-start;flex-direction:column}
+  .episode-actions {width:100%}
+  .episode-actions a {flex:1;text-align:center}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {scroll-behavior:auto!important;transition:none!important}
 }
 </style>
 </head>
 <body>
 <header>
-  <div class="logo" id="logo">KaiFlix 🎬</div>
-  <nav>
+  <div class="logo" id="logo">Kai<span>Flix</span> 🎬</div>
+  <nav aria-label="Main navigation">
     <a href="#home">Home</a>
     <a href="#catalog" data-nav-cat="Movie">Movies</a>
     <a href="#catalog" data-nav-cat="TV Series">Series</a>
     <a href="#catalog" data-nav-cat="Anime">Anime</a>
   </nav>
 </header>
+
 <section class="hero" id="hero">
-  <h1>Unlimited Stories.<br>One Destination.</h1>
-  <p>Discover Movies, TV Series &amp; Anime.</p>
-  <input class="search" id="search" type="search" placeholder="Search your favourite title..." aria-label="Search titles">
+  <div class="hero-kicker">WELCOME TO KAIFLIX</div>
+  <h1>Big Stories.<br><span>Epic Worlds.</span></h1>
+  <p>Your next favourite movie, binge-worthy series, or anime adventure is waiting. Explore your entertainment universe on KaiFlix.</p>
+  <div class="hero-actions">
+    <a class="hero-primary" href="#catalog">✦ Explore Collection</a>
+    <a class="hero-secondary" href="#catalog" data-hero-cat="Anime">▶ Discover Anime</a>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon" aria-hidden="true">⌕</span>
+    <input class="search" id="search" type="search" placeholder="Search movies, series or anime..." aria-label="Search titles">
+  </div>
 </section>
+
 <main>
   <section id="catalog">
-    <h2>Explore Catalog</h2>
+    <div class="catalog-top">
+      <div>
+        <h2>Explore Catalog</h2>
+        <p class="section-subtitle">Find your next favourite story.</p>
+      </div>
+    </div>
     <div class="filters" aria-label="Filter by category">
-      <button type="button" class="active" data-cat="All">All</button>
+      <button type="button" class="active" data-cat="All">All Titles</button>
       <button type="button" data-cat="Movie">Movies</button>
       <button type="button" data-cat="TV Series">TV Series</button>
       <button type="button" data-cat="Anime">Anime</button>
     </div>
-    <!-- Adsterra Native Banner -->
+
+    <!-- Adsterra Native Banner: keep this existing ad code only once -->
     <div class="ad-slot" aria-label="Advertisement">
       <p class="ad-label">Advertisement</p>
       <script async="async" data-cfasync="false" src="https://bancadeltempoidea.org/21/31a9cb316c484308f95d99ad4fd50de3"></script>
       <div id="container-31a9cb316c484308f95d99ad4fd50de3"></div>
     </div>
     <!-- End Adsterra Native Banner -->
+
     <p id="status" role="status">Loading catalog...</p>
     <div class="grid" id="grid"></div>
     <p id="empty" hidden>No titles found. Try another search.</p>
   </section>
+
   <section id="detail">
     <div class="breadcrumb" id="breadcrumb"></div>
     <button type="button" class="back-btn" id="backBtn">← Back to Catalog</button>
@@ -130,7 +353,9 @@ footer{text-align:center;padding:25px;color:#8b98ac;border-top:1px solid var(--l
     <div id="detailContent"></div>
   </section>
 </main>
-<footer>© 2026 KaiFlix · Your entertainment hub</footer>
+
+<footer>© 2026 <strong>KaiFlix</strong> · Your entertainment hub</footer>
+
 <script>
 "use strict";
 
@@ -138,7 +363,6 @@ let titles = [];
 let category = "All";
 let routeToken = 0;
 
-// Always use the verified API host, even if the site is opened on www or another alias.
 const API_BASE_URL = "https://kaiflix.bond";
 
 const grid = document.getElementById("grid");
@@ -182,14 +406,13 @@ function makeImdbRating(value, detailed = false) {
   return badge;
 }
 
-/* More descriptive API errors help diagnose title/season failures. */
 async function api(path) {
   const requestUrl = new URL(path, API_BASE_URL);
   let response;
   try {
     response = await fetch(requestUrl.href, {
       method: "GET",
-      headers: { "Accept": "application/json" },
+      headers: {"Accept":"application/json"},
       cache: "no-store"
     });
   } catch (error) {
@@ -203,7 +426,6 @@ async function api(path) {
 
   const contentType = response.headers.get("content-type") || "";
   const body = await response.text();
-
   if (!body.trim()) {
     throw new Error(requestUrl.pathname + " returned an empty response");
   }
@@ -212,7 +434,7 @@ async function api(path) {
   try {
     data = JSON.parse(body);
   } catch (error) {
-    console.error("KaiFlix invalid JSON response:", requestUrl.href, body.slice(0, 250), error);
+    console.error("KaiFlix invalid JSON response:", requestUrl.href, body.slice(0,250), error);
     throw new Error(requestUrl.pathname + " did not return valid JSON" +
       (contentType ? " (Content-Type: " + contentType + ")" : ""));
   }
@@ -243,17 +465,18 @@ function makePoster(url, title) {
   fallback.className = "poster-fallback";
   fallback.textContent = "🎬 Poster unavailable";
   box.appendChild(fallback);
+
   const poster = safeUrl(url);
   if (poster) {
     const img = document.createElement("img");
     img.alt = (title || "Title") + " poster";
     img.loading = "lazy";
     img.decoding = "async";
-    img.addEventListener("load", () => fallback.remove(), { once: true });
+    img.addEventListener("load", () => fallback.remove(), {once:true});
     img.addEventListener("error", () => {
       img.remove();
       fallback.textContent = "🎬 Poster unavailable";
-    }, { once: true });
+    }, {once:true});
     img.src = poster;
     box.appendChild(img);
   }
@@ -273,7 +496,7 @@ function render() {
   const items = titles.filter(t => {
     const matchesCategory = category === "All" || t.category === category;
     const rating = validImdbRating(t.imdb_rating);
-    const searchable = [t.title, t.category, t.year, t.quality,
+    const searchable = [t.title,t.category,t.year,t.quality,
       rating === null ? "" : rating.toFixed(1)]
       .some(value => String(value ?? "").toLowerCase().includes(q));
     return matchesCategory && searchable;
@@ -286,6 +509,7 @@ function render() {
     const poster = makePoster(t.poster_url, t.title);
     const info = document.createElement("div");
     info.className = "info";
+
     const title = document.createElement("h3");
     title.textContent = t.title || "Untitled";
     info.appendChild(title);
@@ -307,14 +531,14 @@ function render() {
     }
 
     const meta = document.createElement("p");
-    meta.textContent = [t.category || "Uncategorized", t.year || "Year unknown"].join(" · ");
+    meta.textContent = [t.category || "Uncategorized",t.year || "Year unknown"].join(" · ");
     info.appendChild(meta);
 
     if (t.category === "Movie") {
       const watch = safeUrl(t.watch_url);
-      if (watch) info.appendChild(makeLink(watch, "▶ Watch", "watch"));
+      if (watch) info.appendChild(makeLink(watch,"▶ Watch","watch"));
       const download = safeUrl(t.download_url);
-      if (download) info.appendChild(makeLink(download, "↓ Download", "download"));
+      if (download) info.appendChild(makeLink(download,"↓ Download","download"));
     } else {
       const open = document.createElement("button");
       open.type = "button";
@@ -330,7 +554,7 @@ function render() {
         location.hash = "title/" + encodeURIComponent(t.id);
       });
     }
-    card.append(poster, info);
+    card.append(poster,info);
     grid.appendChild(card);
   }
 
@@ -341,7 +565,7 @@ function render() {
 
 function setBreadcrumb(items) {
   breadcrumb.replaceChildren();
-  items.forEach((item, index) => {
+  items.forEach((item,index) => {
     if (index) {
       const separator = document.createElement("span");
       separator.textContent = "›";
@@ -351,7 +575,7 @@ function setBreadcrumb(items) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = item.label;
-      btn.addEventListener("click", item.action);
+      btn.addEventListener("click",item.action);
       breadcrumb.appendChild(btn);
     } else {
       const span = document.createElement("span");
@@ -366,7 +590,7 @@ function showCatalog() {
   detail.style.display = "none";
   catalog.style.display = "";
   hero.style.display = "";
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
   render();
 }
 
@@ -376,7 +600,7 @@ function showDetailLoading(message) {
   detail.style.display = "block";
   detailContent.replaceChildren();
   detailStatus.textContent = message || "Loading...";
-  setBreadcrumb([{ label: "Home", action: showCatalog }]);
+  setBreadcrumb([{label:"Home",action:showCatalog}]);
 }
 
 function makeBackButton() {
@@ -390,51 +614,51 @@ async function openTitle(id) {
   const token = ++routeToken;
   showDetailLoading("Loading title details...");
   try {
-    /* Load title first: a seasons response should not hide valid title details. */
     const titleData = await api("/api/titles/" + encodeURIComponent(id));
     if (token !== routeToken) return;
-    // Accept either a direct title object or common API wrappers.
+
     const t = titleData && titleData.title && typeof titleData.title === "object"
       ? titleData.title
       : titleData && titleData.data && typeof titleData.data === "object"
-        ? titleData.data
-        : titleData;
+        ? titleData.data : titleData;
+
     if (!t || typeof t !== "object" || Array.isArray(t) ||
         (t.id === undefined && t.id !== 0) || !t.title) {
       console.error("KaiFlix unexpected title API payload:", {
-        requestedId: id,
-        apiUrl: API_BASE_URL + "/api/titles/" + encodeURIComponent(id),
-        payload: titleData
+        requestedId:id,
+        apiUrl:API_BASE_URL + "/api/titles/" + encodeURIComponent(id),
+        payload:titleData
       });
-      throw new Error("Unexpected title response from " + API_BASE_URL + ". Open /api/titles/" + encodeURIComponent(id) + " and check the JSON.");
+      throw new Error("Unexpected title response from " + API_BASE_URL +
+        ". Open /api/titles/" + encodeURIComponent(id) + " and check the JSON.");
     }
 
     let seasons = [];
     let seasonLoadError = "";
     try {
       const seasonsData = await api("/api/titles/" + encodeURIComponent(id) + "/seasons");
-      seasons = getRows(seasonsData, "seasons")
-        .slice()
-        .sort((a, b) => Number(a.season_number || 0) - Number(b.season_number || 0));
+      seasons = getRows(seasonsData,"seasons").slice().sort(
+        (a,b) => Number(a.season_number || 0) - Number(b.season_number || 0)
+      );
     } catch (error) {
       seasonLoadError = error && error.message ? error.message : String(error);
-      console.error("KaiFlix seasons error:", error);
+      console.error("KaiFlix seasons error:",error);
     }
     if (token !== routeToken) return;
 
     detailStatus.textContent = "";
     setBreadcrumb([
-      { label: "Home", action: showCatalog },
-      { label: t.category || "Catalog", action: () => {
+      {label:"Home",action:showCatalog},
+      {label:t.category || "Catalog",action:() => {
         setCategory(t.category || "All");
         showCatalog();
       }},
-      { label: t.title || "Details" }
+      {label:t.title || "Details"}
     ]);
 
     const layout = document.createElement("div");
     layout.className = "detail-layout";
-    const poster = makePoster(t.poster_url, t.title);
+    const poster = makePoster(t.poster_url,t.title);
     poster.className = "poster detail-poster";
     layout.appendChild(poster);
 
@@ -445,9 +669,10 @@ async function openTitle(id) {
     description.appendChild(heading);
 
     const meta = document.createElement("p");
-    meta.textContent = [t.category, t.year || "Year unknown"].filter(Boolean).join(" · ");
+    meta.textContent = [t.category,t.year || "Year unknown"].filter(Boolean).join(" · ");
     description.appendChild(meta);
-    const rating = makeImdbRating(t.imdb_rating, true);
+
+    const rating = makeImdbRating(t.imdb_rating,true);
     if (rating) description.appendChild(rating);
 
     const intro = document.createElement("p");
@@ -483,8 +708,8 @@ async function openTitle(id) {
         name.textContent = "Season " + (season.season_number ?? "?");
         const sub = document.createElement("span");
         sub.textContent = "View episodes →";
-        btn.append(name, sub);
-        btn.addEventListener("click", () => {
+        btn.append(name,sub);
+        btn.addEventListener("click",() => {
           location.hash = "season/" + encodeURIComponent(season.id);
         });
         seasonList.appendChild(btn);
@@ -495,7 +720,7 @@ async function openTitle(id) {
     if (token !== routeToken) return;
     const message = error && error.message ? error.message : String(error);
     detailStatus.textContent = "Could not load this title: " + message;
-    console.error("KaiFlix title error:", error);
+    console.error("KaiFlix title error:",error);
   }
 }
 
@@ -506,27 +731,28 @@ async function openSeason(id) {
     const seasonData = await api("/api/seasons/" + encodeURIComponent(id));
     if (token !== routeToken) return;
     const season = seasonData && seasonData.season ? seasonData.season : seasonData;
+
     if (!season || season.id === undefined || season.id === null) {
       throw new Error("Season endpoint returned no valid season object.");
     }
 
-    const [episodesData, titleData] = await Promise.all([
+    const [episodesData,titleData] = await Promise.all([
       api("/api/seasons/" + encodeURIComponent(id) + "/episodes"),
       api("/api/titles/" + encodeURIComponent(season.title_id))
     ]);
     if (token !== routeToken) return;
 
     const title = titleData && titleData.title ? titleData.title : titleData;
-    const episodes = getRows(episodesData, "episodes")
-      .slice()
-      .sort((a, b) => Number(a.episode_number || 0) - Number(b.episode_number || 0));
+    const episodes = getRows(episodesData,"episodes").slice().sort(
+      (a,b) => Number(a.episode_number || 0) - Number(b.episode_number || 0)
+    );
 
     setBreadcrumb([
-      { label: "Home", action: showCatalog },
-      { label: title.title || "Series", action: () => {
+      {label:"Home",action:showCatalog},
+      {label:title.title || "Series",action:() => {
         location.hash = "title/" + encodeURIComponent(season.title_id);
       }},
-      { label: "Season " + (season.season_number ?? "?") }
+      {label:"Season " + (season.season_number ?? "?")}
     ]);
     detailStatus.textContent = "";
 
@@ -555,18 +781,19 @@ async function openSeason(id) {
       card.className = "episode-card";
       const info = document.createElement("div");
       const epHeading = document.createElement("h3");
-      epHeading.textContent = "Episode " + (ep.episode_number ?? "?") + (ep.title ? " — " + ep.title : "");
+      epHeading.textContent = "Episode " + (ep.episode_number ?? "?") +
+        (ep.title ? " — " + ep.title : "");
       const epMeta = document.createElement("p");
       epMeta.textContent = title.title || "KaiFlix episode";
-      info.append(epHeading, epMeta);
+      info.append(epHeading,epMeta);
       card.appendChild(info);
 
       const actions = document.createElement("div");
       actions.className = "episode-actions";
       const watch = safeUrl(ep.watch_url);
       const download = safeUrl(ep.download_url);
-      if (watch) actions.appendChild(makeLink(watch, "▶ Watch", "watch"));
-      if (download) actions.appendChild(makeLink(download, "↓ Download", "download"));
+      if (watch) actions.appendChild(makeLink(watch,"▶ Watch","watch"));
+      if (download) actions.appendChild(makeLink(download,"↓ Download","download"));
       if (!watch && !download) {
         const unavailable = document.createElement("span");
         unavailable.style.color = "var(--muted)";
@@ -581,7 +808,7 @@ async function openSeason(id) {
     if (token !== routeToken) return;
     const message = error && error.message ? error.message : String(error);
     detailStatus.textContent = "Could not load episodes: " + message;
-    console.error("KaiFlix season error:", error);
+    console.error("KaiFlix season error:",error);
   }
 }
 
@@ -592,6 +819,7 @@ function route() {
   } catch {
     hash = location.hash || "#catalog";
   }
+
   if (hash.startsWith("#title/")) {
     const id = hash.slice("#title/".length);
     if (id) openTitle(id);
@@ -608,30 +836,44 @@ function route() {
 async function loadTitles() {
   try {
     const data = await api("/api/titles");
-    titles = getRows(data, "titles");
-    status.textContent = titles.length ? titles.length + " title(s) loaded" : "No titles in the catalog yet.";
+    titles = getRows(data,"titles");
+    status.textContent = titles.length
+      ? titles.length + " title(s) loaded"
+      : "No titles in the catalog yet.";
     render();
   } catch (error) {
-    status.textContent = "Could not load catalog: " + (error && error.message ? error.message : "Unknown error");
-    console.error("KaiFlix catalog error:", error);
+    status.textContent = "Could not load catalog: " +
+      (error && error.message ? error.message : "Unknown error");
+    console.error("KaiFlix catalog error:",error);
   }
 }
 
 document.querySelectorAll(".filters button").forEach(btn => {
-  btn.addEventListener("click", () => setCategory(btn.dataset.cat));
+  btn.addEventListener("click",() => setCategory(btn.dataset.cat));
 });
+
 document.querySelectorAll("[data-nav-cat]").forEach(link => {
-  link.addEventListener("click", () => setCategory(link.dataset.navCat));
+  link.addEventListener("click",() => setCategory(link.dataset.navCat));
 });
-search.addEventListener("input", render);
-document.getElementById("logo").addEventListener("click", () => {
+
+document.querySelectorAll("[data-hero-cat]").forEach(link => {
+  link.addEventListener("click",() => setCategory(link.dataset.heroCat));
+});
+
+search.addEventListener("input",render);
+
+document.getElementById("logo").addEventListener("click",() => {
   location.hash = "catalog";
   showCatalog();
 });
-window.addEventListener("hashchange", route);
+
+window.addEventListener("hashchange",route);
 makeBackButton();
 loadTitles();
-if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) route();
+
+if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) {
+  route();
+}
 </script>
 </body>
-</html>
+ </html>
