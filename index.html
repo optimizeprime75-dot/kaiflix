@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,6 +34,100 @@ a {color:inherit}
 button,input {font:inherit}
 button {color:inherit}
 
+/* PREMIUM CINEMATIC INTRO */
+.intro-screen {
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at center,rgba(24,48,75,.98) 0%,#091526 55%,#030810 100%);
+  opacity:1;
+  visibility:visible;
+  transition:opacity .7s ease,visibility .7s ease;
+}
+.intro-screen::before {
+  content:"";
+  position:absolute;
+  width:280px;
+  height:280px;
+  border-radius:50%;
+  background:rgba(232,189,104,.12);
+  filter:blur(75px);
+  animation:introGlow 1.7s ease-in-out infinite alternate;
+}
+.intro-screen::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,227,160,.035) 50%,transparent 65%);
+  transform:translateX(-100%);
+  animation:introSweep 1.5s ease .15s both;
+}
+.intro-screen.is-hidden {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.intro-content {
+  position:relative;
+  z-index:1;
+  text-align:center;
+  animation:introEnter .9s cubic-bezier(.2,.8,.2,1) both;
+}
+.intro-brand {
+  font-size:clamp(42px,10vw,72px);
+  font-weight:950;
+  letter-spacing:-2.5px;
+  color:#fff;
+  text-shadow:0 0 35px rgba(232,189,104,.16);
+}
+.intro-brand span {color:var(--gold-light)}
+.intro-line {
+  width:110px;
+  height:2px;
+  margin:17px auto;
+  background:linear-gradient(90deg,transparent,var(--gold-light),transparent);
+  box-shadow:0 0 14px rgba(232,189,104,.45);
+  animation:introLine 1s ease .2s both;
+}
+.intro-tagline {
+  margin:0;
+  color:var(--gold);
+  font-size:10px;
+  letter-spacing:3px;
+  font-weight:800;
+}
+body.intro-running {overflow:hidden}
+
+@keyframes introEnter {
+  from {opacity:0;transform:translateY(20px) scale(.94);filter:blur(8px)}
+  to {opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+@keyframes introLine {
+  from {width:0;opacity:0}
+  to {width:110px;opacity:1}
+}
+@keyframes introGlow {
+  from {transform:scale(.85);opacity:.5}
+  to {transform:scale(1.15);opacity:1}
+}
+@keyframes introSweep {
+  from {transform:translateX(-100%)}
+  to {transform:translateX(100%)}
+}
+@keyframes kaiHeroEnter {
+  from {opacity:0;transform:translateY(18px)}
+  to {opacity:1;transform:translateY(0)}
+}
+@keyframes kaiCardEnter {
+  from {opacity:0;transform:translateY(12px)}
+  to {opacity:1;transform:translateY(0)}
+}
+
 /* HEADER */
 header {
   position:sticky;
@@ -57,6 +150,11 @@ header {
   color:#fff;
   cursor:pointer;
   white-space:nowrap;
+  transition:transform .25s ease,text-shadow .25s ease;
+}
+.logo:hover {
+  transform:scale(1.035);
+  text-shadow:0 0 20px rgba(232,189,104,.2);
 }
 .logo span {color:var(--gold)}
 nav {display:flex;gap:7px;align-items:center;flex-wrap:wrap}
@@ -67,11 +165,12 @@ nav a {
   font-weight:700;
   padding:10px 14px;
   border-radius:8px;
-  transition:background .2s,color .2s;
+  transition:background .25s,color .25s,transform .25s;
 }
 nav a:hover,nav a:focus-visible {
   color:var(--gold-light);
   background:rgba(232,189,104,.09);
+  transform:translateY(-1px);
   outline:none;
 }
 
@@ -140,9 +239,7 @@ nav a:hover,nav a:focus-visible {
   letter-spacing:-2.8px;
   font-weight:900;
 }
-.hero h1 span {
-  color:var(--gold-light);
-}
+.hero h1 span {color:var(--gold-light)}
 .hero p {
   max-width:570px;
   margin:21px 0 25px;
@@ -167,7 +264,7 @@ nav a:hover,nav a:focus-visible {
   text-decoration:none;
   font-size:13px;
   font-weight:850;
-  transition:transform .2s,filter .2s;
+  transition:transform .25s ease,filter .25s ease,box-shadow .25s ease;
 }
 .hero-primary {
   color:#15120b;
@@ -180,8 +277,9 @@ nav a:hover,nav a:focus-visible {
   border:1px solid rgba(232,189,104,.35);
 }
 .hero-primary:hover,.hero-secondary:hover {
-  transform:translateY(-2px);
+  transform:translateY(-3px);
   filter:brightness(1.08);
+  box-shadow:0 10px 28px rgba(181,138,62,.2);
 }
 .search-wrap {
   position:relative;
@@ -206,13 +304,23 @@ nav a:hover,nav a:focus-visible {
   background:rgba(5,13,24,.8);
   color:white;
   font-size:14px;
-  transition:border-color .2s,box-shadow .2s;
+  transition:border-color .25s,box-shadow .25s,background .25s;
 }
 .search::placeholder {color:#8798ad}
 .search:focus {
   border-color:var(--gold-dark);
-  box-shadow:0 0 0 3px rgba(232,189,104,.10);
+  background:rgba(5,13,24,.96);
+  box-shadow:0 0 0 3px rgba(232,189,104,.10),0 0 24px rgba(232,189,104,.06);
 }
+
+/* HERO ENTRANCE */
+.hero-kicker,.hero h1,.hero p,.hero-actions,.search-wrap {
+  animation:kaiHeroEnter .65s cubic-bezier(.2,.7,.2,1) both;
+}
+.hero h1 {animation-delay:.08s}
+.hero p {animation-delay:.15s}
+.hero-actions {animation-delay:.22s}
+.search-wrap {animation-delay:.29s}
 
 /* CATALOG */
 main {
@@ -252,17 +360,21 @@ h2 {
   cursor:pointer;
   font-size:12px;
   font-weight:800;
-  transition:all .2s;
+  transition:background .25s,border-color .25s,color .25s,transform .25s,box-shadow .25s;
 }
 .filters button:hover {
   border-color:var(--gold-dark);
   color:var(--gold-light);
+  transform:translateY(-2px);
 }
 .filters button.active {
   color:#17130b;
   background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));
   border-color:var(--gold);
   box-shadow:0 4px 17px rgba(181,138,62,.12);
+}
+.filters button.active:hover {
+  box-shadow:0 7px 23px rgba(181,138,62,.22);
 }
 
 /* EXISTING NATIVE BANNER SLOT */
@@ -294,12 +406,13 @@ h2 {
   border:1px solid #24354b;
   border-radius:11px;
   background:linear-gradient(160deg,#122238,#0b1727);
-  transition:transform .24s,border-color .24s,box-shadow .24s;
+  transition:transform .28s cubic-bezier(.2,.7,.2,1),border-color .28s,box-shadow .28s;
+  animation:kaiCardEnter .42s ease both;
 }
 .card:hover {
   transform:translateY(-5px);
   border-color:rgba(232,189,104,.7);
-  box-shadow:0 13px 30px rgba(0,0,0,.3),0 0 17px rgba(232,189,104,.045);
+  box-shadow:0 13px 30px rgba(0,0,0,.3),0 0 17px rgba(232,189,104,.08);
 }
 .poster {
   position:relative;
@@ -318,9 +431,12 @@ h2 {
   width:100%;
   height:100%;
   object-fit:cover;
-  transition:transform .45s;
+  transition:transform .5s cubic-bezier(.2,.7,.2,1),filter .5s;
 }
-.card:hover .poster img {transform:scale(1.045)}
+.card:hover .poster img {
+  transform:scale(1.055);
+  filter:brightness(1.06);
+}
 .poster-fallback {
   padding:12px;
   font-size:13px;
@@ -355,9 +471,13 @@ h2 {
   font-size:12px;
   font-weight:900;
   cursor:pointer;
-  transition:filter .2s,transform .2s;
+  transition:filter .22s,transform .22s,box-shadow .22s;
 }
-.info a:hover,.action-btn:hover {filter:brightness(1.09)}
+.info a:hover,.action-btn:hover {
+  filter:brightness(1.09);
+  transform:translateY(-1px);
+  box-shadow:0 5px 14px rgba(181,138,62,.13);
+}
 .info a.download,.episode-actions a.download {
   color:#e5d4ad;
   background:#192a40;
@@ -406,6 +526,7 @@ h2 {
   color:var(--gold);
   cursor:pointer;
   font-size:12px;
+  transition:color .2s;
 }
 .breadcrumb button:hover {color:var(--gold-light)}
 .detail-layout {
@@ -413,6 +534,7 @@ h2 {
   grid-template-columns:minmax(145px,235px) minmax(0,1fr);
   align-items:start;
   gap:28px;
+  animation:kaiCardEnter .4s ease both;
 }
 .detail-poster {
   width:100%;
@@ -460,11 +582,12 @@ h2 {
   color:white;
   text-align:left;
   cursor:pointer;
-  transition:all .2s;
+  transition:transform .25s,border-color .25s,box-shadow .25s;
 }
 .season-card:hover {
-  transform:translateY(-2px);
+  transform:translateY(-3px);
   border-color:var(--gold-dark);
+  box-shadow:0 8px 20px rgba(0,0,0,.2);
 }
 .season-card strong {display:block;margin-bottom:8px;font-size:14px}
 .season-card span {color:var(--muted);font-size:11px}
@@ -478,6 +601,12 @@ h2 {
   border:1px solid #293a50;
   border-radius:10px;
   background:linear-gradient(110deg,#112137,#0b1726);
+  transition:border-color .25s,transform .25s;
+  animation:kaiCardEnter .4s ease both;
+}
+.episode-card:hover {
+  border-color:rgba(232,189,104,.45);
+  transform:translateY(-2px);
 }
 .episode-card h3 {
   margin:0 0 6px;
@@ -495,7 +624,9 @@ h2 {
   font-size:11px;
   font-weight:900;
   white-space:nowrap;
+  transition:filter .2s,transform .2s;
 }
+.episode-actions a:hover {filter:brightness(1.09);transform:translateY(-1px)}
 .back-btn {
   display:inline-block;
   margin-bottom:18px;
@@ -505,8 +636,12 @@ h2 {
   background:#102036;
   color:#f0dfbc;
   cursor:pointer;
+  transition:background .2s,border-color .2s,transform .2s;
 }
-.back-btn:hover {border-color:var(--gold-dark)}
+.back-btn:hover {
+  border-color:var(--gold-dark);
+  transform:translateX(-2px);
+}
 #detailStatus {color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
 .hidden {display:none!important}
 
@@ -542,13 +677,30 @@ footer strong {color:var(--gold)}
   .episode-actions {width:100%}
   .episode-actions a {flex:1;text-align:center}
 }
+
+/* ACCESSIBILITY: RESPECT REDUCED MOTION */
 @media(prefers-reduced-motion:reduce) {
-  *,*::before,*::after {scroll-behavior:auto!important;transition:none!important}
+  html {scroll-behavior:auto!important}
+  *,*::before,*::after {
+    scroll-behavior:auto!important;
+    animation:none!important;
+    transition:none!important;
+  }
 }
 </style>
 </head>
 
 <body>
+
+<!-- KAIFlix CINEMATIC INTRO -->
+<div class="intro-screen" id="introScreen" aria-hidden="true">
+  <div class="intro-content">
+    <div class="intro-brand">Kai<span>Flix</span> ✦</div>
+    <div class="intro-line"></div>
+    <p class="intro-tagline">YOUR ENTERTAINMENT DESTINATION</p>
+  </div>
+</div>
+
 <header>
   <div class="logo" id="logo">Kai<span>Flix</span> ✦</div>
   <nav aria-label="Main navigation">
@@ -614,6 +766,41 @@ footer strong {color:var(--gold)}
 
 <script>
 "use strict";
+
+/* CINEMATIC INTRO: ONCE PER SESSION */
+function runKaiFlixIntro() {
+  const screen = document.getElementById("introScreen");
+  if (!screen) return;
+
+  let reducedMotion = false;
+  let alreadySeen = false;
+
+  try {
+    reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (error) {}
+
+  try {
+    alreadySeen = sessionStorage.getItem("kaiflixIntroSeen") === "1";
+  } catch (error) {}
+
+  if (reducedMotion || alreadySeen) {
+    screen.classList.add("is-hidden");
+    return;
+  }
+
+  document.body.classList.add("intro-running");
+
+  try {
+    sessionStorage.setItem("kaiflixIntroSeen", "1");
+  } catch (error) {}
+
+  window.setTimeout(() => {
+    screen.classList.add("is-hidden");
+    document.body.classList.remove("intro-running");
+  }, 1700);
+}
+
+runKaiFlixIntro();
 
 let titles = [];
 let category = "All";
@@ -1193,4 +1380,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
-</html>
+  </html>
