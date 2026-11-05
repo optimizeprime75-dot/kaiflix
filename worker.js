@@ -1,4 +1,3 @@
-
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -9,6 +8,14 @@ function json(data, status = 200) {
       "Access-Control-Allow-Headers": "Content-Type, X-Admin-Password",
     },
   });
+}
+
+// Same as json(), but tells browsers and caches never to store the response.
+// Used for private admin data such as visitor reports.
+function privateJson(data, status = 200) {
+  const response = json(data, status);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
 
 function validUrl(value) {
@@ -172,6 +179,84 @@ async function exists(db, table, id) {
   return Boolean(result);
 }
 
+/* ============================================================
+   VISITOR REPORT SYSTEM
+   - Visitors may only SUBMIT reports (POST /api/reports).
+   - Reading, updating and deleting reports needs the Admin Password.
+   ============================================================ */
+
+const REPORT_CONTENT_TYPES = ["Movie", "TV Series", "Anime"];
+
+const REPORT_PROBLEM_TYPES = [
+  "Video is not playing",
+  "Watch link is not working",
+  "Download link is not working",
+  "Episode is not working",
+  "Missing episode",
+  "Wrong content information",
+  "Other problem",
+];
+
+const REPORT_STATUSES = ["Pending", "Reviewing", "Fixed", "Rejected"];
+
+// Spam limits.
+const REPORT_MAX_PER_IP_PER_HOUR = 5;
+const REPORT_MAX_TOTAL_PER_HOUR = 100;
+
+function validateReport(body) {
+  // Hidden "website" field: real visitors never fill it, bots often do.
+  if (typeof body.website === "string" && body.website.trim() !== "") {
+    return { spam: true };
+  }
+
+  const content_type =
+    typeof body.content_type === "string" ? body.content_type.trim() : "";
+
+  if (!REPORT_CONTENT_TYPES.includes(content_type)) {
+    return { error: "Please choose a valid content type" };
+  }
+
+  const content_name =
+    typeof body.content_name === "string" ? body.content_name.trim() : "";
+
+  if (!content_name || content_name.length > 200) {
+    return {
+      error: "Content name is required and must be at most 200 characters",
+    };
+  }
+
+  const problem_type =
+    typeof body.problem_type === "string" ? body.problem_type.trim() : "";
+
+  if (!REPORT_PROBLEM_TYPES.includes(problem_type)) {
+    return { error: "Please choose a valid problem type" };
+  }
+
+  const description =
+    typeof body.description === "string" ? body.description.trim() : "";
+
+  if (description.length < 10 || description.length > 2000) {
+    return {
+      error: "Description must be between 10 and 2000 characters",
+    };
+  }
+
+  return {
+    value: { content_type, content_name, problem_type, description },
+  };
+}
+
+// Stores only a one-way hash of the visitor IP, never the IP itself.
+async function hashVisitor(request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const data = new TextEncoder().encode("kaiflix-report:" + ip);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -198,7 +283,13 @@ export default {
     try {
       const isWrite = ["POST", "PUT", "DELETE"].includes(request.method);
 
-      if (isWrite) {
+      // Reports routes. The ONLY public report action is submitting one.
+      const isReportsRoute =
+        path === "/api/reports" || /^\/api\/reports\/\d+$/.test(path);
+      const isPublicReportSubmit =
+        path === "/api/reports" && request.method === "POST";
+
+      if (!isPublicReportSubmit && (isWrite || isReportsRoute)) {
         if (!env.ADMIN_PASSWORD) {
           return json({ error: "Server configuration error" }, 500);
         }
@@ -563,6 +654,175 @@ export default {
             success: true,
             id,
             message: "Episode deleted successfully",
+          });
+        }
+      }
+
+      /* ---------- VISITOR REPORTS ---------- */
+
+      // PUBLIC: a visitor submits a report. This is the only open report route.
+      if (path === "/api/reports" && request.method === "POST") {
+        const declaredSize = Number(request.headers.get("Content-Length") || 0);
+
+        if (declaredSize > 10000) {
+          return json({ error: "Request is too large" }, 413);
+        }
+
+        const parsed = await readBody(request);
+        if (parsed.error) return json({ error: parsed.error }, 400);
+
+        const checked = validateReport(parsed.body);
+
+        // Bots that fill the hidden field get a normal-looking reply,
+        // but nothing is saved.
+        if (checked.spam) {
+          return json({
+            success: true,
+            message: "Report submitted successfully",
+          }, 201);
+        }
+
+        if (checked.error) return json({ error: checked.error }, 400);
+
+        const r = checked.value;
+        const visitor = await hashVisitor(request);
+
+        const perVisitor = await env.DB.prepare(
+          `SELECT COUNT(*) AS total FROM reports
+           WHERE ip_hash = ? AND created_at >= datetime('now', '-1 hour')`
+        ).bind(visitor).first();
+
+        if (perVisitor && perVisitor.total >= REPORT_MAX_PER_IP_PER_HOUR) {
+          return json({
+            error: "Too many reports. Please try again later.",
+          }, 429);
+        }
+
+        const overall = await env.DB.prepare(
+          `SELECT COUNT(*) AS total FROM reports
+           WHERE created_at >= datetime('now', '-1 hour')`
+        ).first();
+
+        if (overall && overall.total >= REPORT_MAX_TOTAL_PER_HOUR) {
+          return json({
+            error: "Too many reports right now. Please try again later.",
+          }, 429);
+        }
+
+        const repeated = await env.DB.prepare(
+          `SELECT id FROM reports
+           WHERE ip_hash = ?
+             AND lower(content_name) = lower(?)
+             AND problem_type = ?
+             AND created_at >= datetime('now', '-1 day')
+           LIMIT 1`
+        ).bind(visitor, r.content_name, r.problem_type).first();
+
+        if (repeated) {
+          return json({
+            error: "You already reported this problem. Thank you!",
+          }, 429);
+        }
+
+        await env.DB.prepare(
+          `INSERT INTO reports
+           (content_type, content_name, problem_type, description, status, ip_hash)
+           VALUES (?, ?, ?, ?, 'Pending', ?)`
+        ).bind(
+          r.content_type,
+          r.content_name,
+          r.problem_type,
+          r.description,
+          visitor
+        ).run();
+
+        return json({
+          success: true,
+          message: "Report submitted successfully",
+        }, 201);
+      }
+
+      // ADMIN ONLY (password already checked above): list reports.
+      if (path === "/api/reports" && request.method === "GET") {
+        const where = [];
+        const values = [];
+
+        const statusFilter = url.searchParams.get("status");
+        const typeFilter = url.searchParams.get("content_type");
+
+        if (statusFilter && REPORT_STATUSES.includes(statusFilter)) {
+          where.push("status = ?");
+          values.push(statusFilter);
+        }
+
+        if (typeFilter && REPORT_CONTENT_TYPES.includes(typeFilter)) {
+          where.push("content_type = ?");
+          values.push(typeFilter);
+        }
+
+        const result = await env.DB.prepare(
+          `SELECT id, content_type, content_name, problem_type,
+                  description, status, created_at
+           FROM reports
+           ${where.length ? "WHERE " + where.join(" AND ") : ""}
+           ORDER BY created_at DESC, id DESC
+           LIMIT 500`
+        ).bind(...values).all();
+
+        return privateJson(result.results);
+      }
+
+      // ADMIN ONLY: change status or delete one report.
+      match = path.match(/^\/api\/reports\/(\d+)$/);
+
+      if (match) {
+        const id = validPositiveInteger(match[1]);
+        if (!id) return json({ error: "Invalid report ID" }, 400);
+
+        if (request.method === "PUT") {
+          const parsed = await readBody(request);
+          if (parsed.error) return json({ error: parsed.error }, 400);
+
+          const status =
+            typeof parsed.body.status === "string"
+              ? parsed.body.status.trim()
+              : "";
+
+          if (!REPORT_STATUSES.includes(status)) {
+            return json({
+              error: "Status must be Pending, Reviewing, Fixed or Rejected",
+            }, 400);
+          }
+
+          if (!(await exists(env.DB, "reports", id))) {
+            return json({ error: "Report not found" }, 404);
+          }
+
+          await env.DB.prepare(
+            "UPDATE reports SET status = ? WHERE id = ?"
+          ).bind(status, id).run();
+
+          return privateJson({
+            success: true,
+            id,
+            status,
+            message: "Report status updated successfully",
+          });
+        }
+
+        if (request.method === "DELETE") {
+          if (!(await exists(env.DB, "reports", id))) {
+            return json({ error: "Report not found" }, 404);
+          }
+
+          await env.DB.prepare(
+            "DELETE FROM reports WHERE id = ?"
+          ).bind(id).run();
+
+          return privateJson({
+            success: true,
+            id,
+            message: "Report deleted successfully",
           });
         }
       }
