@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +38,16 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 .episode{padding:11px 0;border-top:1px solid #263449}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .imdb-rating{color:#fbbf24;font-weight:bold}
+.report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.report-name{font-weight:bold;overflow-wrap:anywhere}
+.status-pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:bold;border:1px solid currentColor;white-space:nowrap}
+.status-Pending{color:#fbbf24}
+.status-Reviewing{color:#38bdf8}
+.status-Fixed{color:#4ade80}
+.status-Rejected{color:#f87171}
+.report-desc{margin:10px 0 0;padding:11px;border-radius:8px;background:#080d18;border:1px solid #263449;color:#e2e8f0;font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.report-status-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;margin-top:11px}
+.report-status-row label{margin:0}
 @media(max-width:520px){body{padding:9px}.panel{padding:12px}.grid{grid-template-columns:1fr}.title-card{grid-template-columns:58px minmax(0,1fr)}.thumb{width:58px;height:88px}}
 </style>
 </head>
@@ -188,6 +197,37 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 <hr>
 <h3>Episodes in this Season</h3>
 <div id="episodeList"></div>
+</section>
+
+<section class="panel" id="reportsPanel">
+<h2>🚩 Visitor Reports</h2>
+<p class="hint">Problems reported by visitors. Reports can only be loaded with the Admin Password entered above.</p>
+
+<div class="grid">
+<div>
+<label for="reportStatusFilter">Status</label>
+<select id="reportStatusFilter">
+<option value="">All statuses</option>
+<option>Pending</option>
+<option>Reviewing</option>
+<option>Fixed</option>
+<option>Rejected</option>
+</select>
+</div>
+<div>
+<label for="reportTypeFilter">Content Type</label>
+<select id="reportTypeFilter">
+<option value="">All types</option>
+<option>Movie</option>
+<option>TV Series</option>
+<option>Anime</option>
+</select>
+</div>
+</div>
+
+<button id="loadReports" class="secondary full" type="button">🔄 Load Reports</button>
+<div id="reportsMessage" class="message hint">Enter the Admin Password above, then press Load Reports.</div>
+<div id="reportList"></div>
 </section>
 </div>
 
@@ -700,6 +740,141 @@ async function deleteEpisode(ep){
     msg("episodeMessage",e.message,"error");
   }
 }
+
+/* ===== Visitor Reports (password protected on the server) ===== */
+const REPORT_STATUSES=["Pending","Reviewing","Fixed","Rejected"];
+let reports=[];
+
+function reportDate(value){
+  if(!value)return "Unknown date";
+  const d=new Date(String(value).replace(" ","T")+"Z");
+  return Number.isNaN(d.getTime())?String(value):d.toLocaleString();
+}
+async function loadReports(){
+  const opts=adminOptions("GET");
+  if(!opts)return;
+
+  const params=new URLSearchParams();
+  if($("reportStatusFilter").value)params.set("status",$("reportStatusFilter").value);
+  if($("reportTypeFilter").value)params.set("content_type",$("reportTypeFilter").value);
+  const query=params.toString();
+
+  $("loadReports").disabled=true;
+  msg("reportsMessage","Loading reports...","info");
+
+  try{
+    const data=await api("/reports"+(query?"?"+query:""),opts);
+    reports=Array.isArray(data)?data:[];
+    renderReports();
+    msg("reportsMessage","Reports shown: "+reports.length,"info");
+  }catch(e){
+    reports=[];
+    $("reportList").replaceChildren();
+    msg("reportsMessage",e.message,"error");
+  }finally{
+    $("loadReports").disabled=false;
+  }
+}
+function renderReports(){
+  const list=$("reportList");
+  list.replaceChildren();
+
+  if(!reports.length){
+    const p=document.createElement("p");
+    p.className="hint";
+    p.textContent="No reports found.";
+    list.append(p);
+    return;
+  }
+
+  reports.forEach(r=>{
+    const c=document.createElement("article");
+    c.className="card";
+
+    const head=document.createElement("div");
+    head.className="report-head";
+
+    const name=document.createElement("div");
+    name.className="report-name";
+    name.textContent="#"+r.id+" · "+(r.content_name||"Unknown content");
+
+    const pill=document.createElement("span");
+    pill.className="status-pill status-"+r.status;
+    pill.textContent=r.status;
+
+    head.append(name,pill);
+
+    const meta=document.createElement("p");
+    meta.className="meta";
+    meta.textContent=(r.content_type||"")+" • "+(r.problem_type||"")+" • "+reportDate(r.created_at);
+
+    const desc=document.createElement("div");
+    desc.className="report-desc";
+    desc.textContent=r.description||"";
+
+    const row=document.createElement("div");
+    row.className="report-status-row";
+
+    const label=document.createElement("label");
+    label.textContent="Status";
+    label.htmlFor="reportStatus"+r.id;
+
+    const select=document.createElement("select");
+    select.id="reportStatus"+r.id;
+    REPORT_STATUSES.forEach(s=>{
+      const o=document.createElement("option");
+      o.value=s;
+      o.textContent=s;
+      select.append(o);
+    });
+    select.value=r.status;
+    select.addEventListener("change",()=>updateReportStatus(r,select));
+
+    row.append(label,select);
+
+    const actions=document.createElement("div");
+    actions.className="actions";
+    actions.append(button("🗑️ Delete Report","danger",()=>deleteReport(r)));
+
+    c.append(head,meta,desc,row,actions);
+    list.append(c);
+  });
+}
+async function updateReportStatus(r,select){
+  const next=select.value;
+  const previous=r.status;
+  const opts=adminOptions("PUT",{status:next});
+  if(!opts){select.value=previous;return;}
+
+  select.disabled=true;
+  try{
+    await api("/reports/"+r.id,opts);
+    r.status=next;
+    renderReports();
+    msg("reportsMessage","Report #"+r.id+" marked as "+next+".");
+  }catch(e){
+    select.value=previous;
+    select.disabled=false;
+    msg("reportsMessage",e.message,"error");
+  }
+}
+async function deleteReport(r){
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
+  if(!confirm("Delete report #"+r.id+" permanently?"))return;
+  try{
+    await api("/reports/"+r.id,opts);
+    reports=reports.filter(x=>x.id!==r.id);
+    renderReports();
+    msg("reportsMessage","Report deleted. Reports shown: "+reports.length);
+  }catch(e){
+    msg("reportsMessage",e.message,"error");
+  }
+}
+$("loadReports").addEventListener("click",loadReports);
+$("reportStatusFilter").addEventListener("change",()=>{if($("password").value)loadReports();});
+$("reportTypeFilter").addEventListener("change",()=>{if($("password").value)loadReports();});
+
 loadTitles();
 </script>
 </body>
