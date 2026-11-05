@@ -160,6 +160,31 @@ h2{margin:0;font-size:clamp(22px,3vw,28px);letter-spacing:-.5px}
 .back-btn:hover{border-color:var(--gold-dark);transform:translateX(-2px)}
 #detailStatus{color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
 
+/* REPORT A PROBLEM */
+.report-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:inline-flex;align-items:center;gap:7px;padding:11px 15px;border:1px solid rgba(232,189,104,.45);border-radius:999px;background:rgba(7,17,31,.92);color:var(--gold-light);font-size:12px;font-weight:850;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:blur(10px);transition:transform .25s,border-color .25s,background .25s}
+.report-fab:hover,.report-fab:focus-visible{transform:translateY(-2px);border-color:var(--gold);background:rgba(16,33,56,.96);outline:none}
+.report-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(3,8,16,.8);backdrop-filter:blur(6px)}
+.report-box{position:relative;width:min(520px,100%);max-height:92vh;overflow:auto;padding:22px;border:1px solid rgba(232,189,104,.3);border-radius:14px;background:linear-gradient(160deg,#122238,#0b1727);box-shadow:0 24px 60px rgba(0,0,0,.55);animation:kaiCardEnter .3s ease both}
+.report-box h2{font-size:21px;padding-right:34px}
+.report-hint{margin:8px 0 4px;color:var(--muted);font-size:12px;line-height:1.6}
+.report-close{position:absolute;top:12px;right:12px;width:34px;height:34px;padding:0;border:1px solid #34445a;border-radius:8px;background:#102036;color:#f0dfbc;font-size:15px;cursor:pointer;transition:border-color .2s}
+.report-close:hover{border-color:var(--gold-dark)}
+.report-box label{display:block;margin:14px 0 6px;color:#cbd5e1;font-size:13px;font-weight:700}
+.report-box input,.report-box select,.report-box textarea{width:100%;padding:12px;border:1px solid #34445a;border-radius:8px;background:#07111f;color:#fff;font-size:16px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+.report-box textarea{resize:vertical;min-height:110px;line-height:1.5}
+.report-box input:focus,.report-box select:focus,.report-box textarea:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(232,189,104,.1)}
+.report-count{margin-top:5px;color:#8798ad;font-size:11px;text-align:right}
+.report-hp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important}
+.report-submit{display:block;width:100%;margin-top:16px;padding:13px;border:0;border-radius:8px;background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));color:#15120b;font-size:14px;font-weight:900;cursor:pointer;transition:filter .2s,transform .2s}
+.report-submit:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.report-submit:disabled{opacity:.6;cursor:default;transform:none}
+.report-msg{margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.report-msg.ok{color:#4ade80}
+.report-msg.error{color:#f87171}
+body.modal-open{overflow:hidden}
+.ep-report{padding:10px 13px;border:1px solid #34445a;border-radius:7px;background:#192a40;color:#e5d4ad;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;transition:border-color .2s,transform .2s}
+.ep-report:hover{border-color:var(--gold-dark);transform:translateY(-1px)}
+
 /* FOOTER */
 footer{padding:28px 5%;border-top:1px solid rgba(232,189,104,.14);background:#050c16;color:#8290a4;text-align:center;font-size:11px}
 footer strong{color:var(--gold)}
@@ -180,6 +205,7 @@ footer strong{color:var(--gold)}
   .episode-card{align-items:flex-start;flex-direction:column}
   .episode-actions{width:100%}
   .episode-actions a{flex:1;text-align:center}
+  .episode-actions .ep-report{flex:1}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto!important}
@@ -262,6 +288,52 @@ footer strong{color:var(--gold)}
 </main>
 
 <footer>© 2026 <strong>KaiFlix</strong> · Your entertainment hub</footer>
+
+<!-- REPORT A PROBLEM -->
+<button type="button" class="report-fab" id="reportFab" aria-haspopup="dialog">⚑ Report a Problem</button>
+
+<div class="report-modal hidden" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportHeading">
+  <div class="report-box">
+    <button type="button" class="report-close" id="reportClose" aria-label="Close report form">✕</button>
+    <h2 id="reportHeading">Report a Problem</h2>
+    <p class="report-hint">Something not working? Tell us and we will check it.</p>
+
+    <form id="reportForm" novalidate>
+      <label for="rType">Content Type *</label>
+      <select id="rType">
+        <option value="">Select content type</option>
+        <option>Movie</option>
+        <option>TV Series</option>
+        <option>Anime</option>
+      </select>
+
+      <label for="rName">Content Name *</label>
+      <input id="rName" type="text" maxlength="200" placeholder="Movie, series or anime name" autocomplete="off">
+
+      <label for="rProblem">Problem Type *</label>
+      <select id="rProblem">
+        <option value="">Select problem type</option>
+        <option>Video is not playing</option>
+        <option>Watch link is not working</option>
+        <option>Download link is not working</option>
+        <option>Episode is not working</option>
+        <option>Missing episode</option>
+        <option>Wrong content information</option>
+        <option>Other problem</option>
+      </select>
+
+      <label for="rDesc">Problem Description *</label>
+      <textarea id="rDesc" maxlength="2000" rows="5" placeholder="Please explain the problem in detail (at least 10 characters)."></textarea>
+      <div class="report-count" id="rCount">0 / 2000</div>
+
+      <input class="report-hp" id="rWebsite" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <button type="submit" class="report-submit" id="rSubmit">Submit Report</button>
+      <div class="report-msg" id="rMsg" role="status"></div>
+    </form>
+  </div>
+</div>
+<!-- END REPORT A PROBLEM -->
 
 <script>
 "use strict";
@@ -787,6 +859,120 @@ function clearSkeleton() {
   dots.classList.add("hidden");
 }
 
+/* REPORT A PROBLEM */
+const REPORT_TYPES = ["Movie", "TV Series", "Anime"];
+const reportFab = document.getElementById("reportFab");
+const reportModal = document.getElementById("reportModal");
+const reportForm = document.getElementById("reportForm");
+const rType = document.getElementById("rType");
+const rName = document.getElementById("rName");
+const rProblem = document.getElementById("rProblem");
+const rDesc = document.getElementById("rDesc");
+const rWebsite = document.getElementById("rWebsite");
+const rCount = document.getElementById("rCount");
+const rSubmit = document.getElementById("rSubmit");
+const rMsg = document.getElementById("rMsg");
+
+let reportContext = {type:"", name:""};
+let reportCloseTimer = null;
+
+function setReportContext(type, name) {
+  reportContext = {type: type || "", name: name || ""};
+}
+
+function setReportMessage(text, kind) {
+  rMsg.textContent = text || "";
+  rMsg.className = "report-msg" + (kind ? " " + kind : "");
+}
+
+function updateReportCount() {
+  rCount.textContent = rDesc.value.length + " / 2000";
+}
+
+function openReport(preset) {
+  const ctx = preset || reportContext;
+
+  clearTimeout(reportCloseTimer);
+  rType.value = REPORT_TYPES.includes(ctx.type) ? ctx.type : "";
+  rName.value = String(ctx.name || "").slice(0, 200);
+  rProblem.value = preset && preset.problem ? preset.problem : "";
+  rDesc.value = "";
+  rWebsite.value = "";
+  rSubmit.disabled = false;
+  setReportMessage("");
+  updateReportCount();
+
+  reportModal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+
+  (rName.value ? rProblem : rName).focus();
+}
+
+function closeReport() {
+  clearTimeout(reportCloseTimer);
+  reportModal.classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  reportFab.focus();
+}
+
+async function submitReport(event) {
+  event.preventDefault();
+
+  const body = {
+    content_type: rType.value,
+    content_name: rName.value.trim(),
+    problem_type: rProblem.value,
+    description: rDesc.value.trim(),
+    website: rWebsite.value
+  };
+
+  if (!body.content_type) return setReportMessage("Please choose the content type.", "error");
+  if (!body.content_name) return setReportMessage("Please enter the content name.", "error");
+  if (!body.problem_type) return setReportMessage("Please choose the problem type.", "error");
+  if (body.description.length < 10) return setReportMessage("Please describe the problem (at least 10 characters).", "error");
+
+  rSubmit.disabled = true;
+  setReportMessage("Submitting your report...");
+
+  try {
+    const response = await fetch(new URL("/api/reports", API_BASE_URL).href, {
+      method: "POST",
+      headers: {"Content-Type":"application/json", "Accept":"application/json"},
+      body: JSON.stringify(body)
+    });
+
+    let data = {};
+    try { data = await response.json(); } catch (error) {}
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not submit your report (error " + response.status + "). Please try again.");
+    }
+
+    setReportMessage("Thank you! Your report has been submitted.", "ok");
+    reportCloseTimer = setTimeout(closeReport, 2600);
+  } catch (error) {
+    const networkProblem = error instanceof TypeError;
+    setReportMessage(
+      networkProblem
+        ? "Could not submit your report. Please check your connection and try again."
+        : error.message,
+      "error"
+    );
+    rSubmit.disabled = false;
+  }
+}
+
+reportFab.addEventListener("click", () => openReport());
+document.getElementById("reportClose").addEventListener("click", closeReport);
+reportModal.addEventListener("click", event => {
+  if (event.target === reportModal) closeReport();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !reportModal.classList.contains("hidden")) closeReport();
+});
+rDesc.addEventListener("input", updateReportCount);
+reportForm.addEventListener("submit", submitReport);
+
 function setBreadcrumb(items) {
   breadcrumb.replaceChildren();
 
@@ -813,6 +999,7 @@ function setBreadcrumb(items) {
 
 function showCatalog() {
   routeToken++;
+  setReportContext("", "");
   detail.style.display = "none";
   catalog.style.display = "";
   hero.style.display = "";
@@ -821,6 +1008,7 @@ function showCatalog() {
 }
 
 function showDetailLoading(message) {
+  setReportContext("", "");
   catalog.style.display = "none";
   hero.style.display = "none";
   detail.style.display = "block";
@@ -887,6 +1075,8 @@ async function openTitle(id) {
       }},
       {label:t.title || "Details"}
     ]);
+
+    setReportContext(t.category, t.title);
 
     const layout = document.createElement("div");
     layout.className = "detail-layout";
@@ -1008,6 +1198,8 @@ async function openSeason(id) {
     heading.style.fontSize = "clamp(24px,4vw,34px)";
     detailContent.appendChild(heading);
 
+    setReportContext(title.category, (title.title || "Series") + " — Season " + (season.season_number ?? "?"));
+
     const count = document.createElement("p");
     count.style.color = "var(--muted)";
     count.textContent = episodes.length + " episode(s)";
@@ -1055,6 +1247,17 @@ async function openSeason(id) {
         unavailable.textContent = "Links not available";
         actions.appendChild(unavailable);
       }
+
+      const reportButton = document.createElement("button");
+      reportButton.type = "button";
+      reportButton.className = "ep-report";
+      reportButton.textContent = "⚑ Report";
+      reportButton.addEventListener("click", () => openReport({
+        type: title.category,
+        name: (title.title || "Series") + " — Season " + (season.season_number ?? "?") + " — Episode " + (ep.episode_number ?? "?"),
+        problem: "Episode is not working"
+      }));
+      actions.appendChild(reportButton);
 
       card.appendChild(actions);
       list.appendChild(card);
@@ -1153,4 +1356,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
-      </html>
+</html>
