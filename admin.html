@@ -6,64 +6,124 @@
 <meta name="theme-color" content="#080d18">
 <title>KaiFlix Admin Panel</title>
 <style>
+:root{--bg:#07111f;--gold:#e8bd68;--gold-light:#ffe3a0;--gold-dark:#b58a3e;--muted:#94a3b8;--text:#f1f5f9;--line:#263a52}
 *{box-sizing:border-box}
-body{margin:0;padding:14px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
-.container{max-width:900px;margin:auto}
-h1{color:#38bdf8;font-size:27px}
-h2{font-size:20px}
-h3{font-size:17px}
-.panel{background:#111827;padding:17px;border-radius:14px;margin:17px 0;border:1px solid #263449}
-label{display:block;margin:12px 0 6px;color:#cbd5e1;font-size:14px}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#080d18;color:white;font-size:15px;min-width:0}
-button{padding:11px 13px;border:0;border-radius:8px;background:#0284c7;color:white;font-weight:bold;cursor:pointer;font-size:14px}
-button:disabled{opacity:.5}
-button.secondary{background:#334155}
-button.danger{background:#dc2626}
-button.green{background:#15803d}
-button.full{width:100%;margin-top:14px}
-.hint,.meta{color:#94a3b8;font-size:13px;line-height:1.5}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:radial-gradient(ellipse at 88% -5%,rgba(42,95,148,.3),transparent 46%),radial-gradient(ellipse at 0% 100%,rgba(130,94,38,.15),transparent 46%),var(--bg)}
+[hidden]{display:none!important}
+
+/* TOP BAR */
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;background:rgba(5,13,24,.92);border-bottom:1px solid rgba(232,189,104,.18);backdrop-filter:blur(16px)}
+.brand{font-size:23px;font-weight:900;letter-spacing:-1px;color:#fff;white-space:nowrap}
+.brand span{color:var(--gold)}
+.brand small{margin-left:7px;padding:3px 7px;border:1px solid rgba(232,189,104,.4);border-radius:6px;color:var(--gold-light);font-size:10px;font-weight:800;letter-spacing:1.6px;vertical-align:middle}
+.topnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{flex:0 0 auto;padding:8px 12px;border-radius:8px;color:#c4cfdf;text-decoration:none;font-size:12px;font-weight:800;transition:background .2s,color .2s}
+.topnav a:hover,.topnav a:focus-visible{background:rgba(232,189,104,.1);color:var(--gold-light);outline:none}
+
+.container{max-width:920px;margin:0 auto;padding:22px 14px 70px}
+.page-head{padding:6px 2px 4px}
+h1{margin:0 0 6px;font-size:clamp(25px,5vw,34px);letter-spacing:-.8px;color:var(--gold-light);background:linear-gradient(110deg,#fff,var(--gold-light) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px}
+h3{font-size:16px}
+
+/* PANELS */
+.panel{scroll-margin-top:76px;margin:18px 0;padding:20px;border:1px solid rgba(232,189,104,.16);border-radius:16px;background:linear-gradient(160deg,rgba(18,36,58,.93),rgba(11,23,39,.93));box-shadow:0 12px 32px rgba(0,0,0,.28);animation:fadeUp .4s ease both}
+.panel>h2{margin:0 0 6px;padding-bottom:12px;border-bottom:1px solid rgba(232,189,104,.14)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* FORMS */
+label{display:block;margin:14px 0 6px;color:#cbd5e1;font-size:13px;font-weight:700}
+input,select{width:100%;min-width:0;padding:12px 13px;border:1px solid #34445a;border-radius:10px;background:#07111f;color:#fff;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+input::placeholder{color:#64748b}
+input:focus,select:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(232,189,104,.12)}
+
+/* BUTTONS */
+button{padding:11px 14px;border:0;border-radius:10px;background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));color:#15120b;font-weight:800;font-size:14px;cursor:pointer;transition:transform .2s,filter .2s,box-shadow .2s}
+button:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.07);box-shadow:0 6px 16px rgba(0,0,0,.28)}
+button:disabled{opacity:.5;cursor:default}
+button.secondary{background:#1f3149;color:#e2e8f0;border:1px solid #34445a}
+button.danger{background:linear-gradient(110deg,#b91c1c,#ef4444);color:#fff}
+button.green{background:linear-gradient(110deg,#15803d,#22c55e);color:#fff}
+button.full{width:100%;margin-top:16px}
+
+/* TEXT */
+.hint,.meta{color:var(--muted);font-size:13px;line-height:1.55}
 .message{margin-top:10px;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
-.card{background:#0b1220;border:1px solid #334155;border-radius:10px;padding:13px;margin:12px 0}
-.title-card{display:grid;grid-template-columns:68px minmax(0,1fr);gap:12px}
-.thumb{width:68px;height:100px;object-fit:cover;border-radius:6px;background:#172b48}
-.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
-.actions button{flex:1;min-width:95px}
-.preview{width:105px;height:155px;object-fit:cover;border-radius:8px;background:#172b48;margin-top:8px}
-.preview-msg{font-size:13px;color:#94a3b8;margin-top:6px;overflow-wrap:anywhere}
 .error{color:#f87171!important}
 .ok{color:#4ade80!important}
-hr{border:0;border-top:1px solid #263449;margin:20px 0}
-[hidden]{display:none!important}
-.season-card{border:1px solid #334155;border-radius:10px;padding:12px;margin:12px 0;background:#080d18}
-.episode{padding:11px 0;border-top:1px solid #263449}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.imdb-rating{color:#fbbf24;font-weight:bold}
+hr{border:0;border-top:1px solid var(--line);margin:20px 0}
+
+/* CARDS */
+.card{margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(7,17,31,.72);transition:border-color .2s,transform .2s}
+.card:hover{border-color:rgba(232,189,104,.4)}
+.title-card{display:grid;grid-template-columns:72px minmax(0,1fr);gap:13px}
+.thumb{width:72px;height:106px;object-fit:cover;border-radius:8px;background:#172b48;border:1px solid #34445a}
+div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1;min-width:95px}
+.preview{width:105px;height:155px;margin-top:10px;object-fit:cover;border-radius:10px;border:1px solid #34445a;background:#172b48}
+.preview-msg{margin-top:6px;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.season-card{margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(7,17,31,.72)}
+.season-card h3{margin:0}
+.episode{padding:12px 0;border-top:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.imdb-rating{color:#fbbf24;font-weight:800}
+
+/* REPORTS */
 .report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.report-name{font-weight:bold;overflow-wrap:anywhere}
-.status-pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:bold;border:1px solid currentColor;white-space:nowrap}
-.status-Pending{color:#fbbf24}
-.status-Reviewing{color:#38bdf8}
-.status-Fixed{color:#4ade80}
-.status-Rejected{color:#f87171}
-.report-desc{margin:10px 0 0;padding:11px;border-radius:8px;background:#080d18;border:1px solid #263449;color:#e2e8f0;font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.report-status-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;margin-top:11px}
+.report-name{font-weight:800;overflow-wrap:anywhere}
+.status-pill{display:inline-block;padding:4px 10px;border:1px solid currentColor;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.status-Pending{color:#fbbf24;background:rgba(251,191,36,.08)}
+.status-Reviewing{color:#38bdf8;background:rgba(56,189,248,.08)}
+.status-Fixed{color:#4ade80;background:rgba(74,222,128,.08)}
+.status-Rejected{color:#f87171;background:rgba(248,113,113,.08)}
+.report-desc{margin:10px 0 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:#07111f;color:#e2e8f0;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.report-status-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;margin-top:12px}
 .report-status-row label{margin:0}
-@media(max-width:520px){body{padding:9px}.panel{padding:12px}.grid{grid-template-columns:1fr}.title-card{grid-template-columns:58px minmax(0,1fr)}.thumb{width:58px;height:88px}}
+
+@media(max-width:520px){
+  .topbar{padding:10px 12px}
+  .brand{font-size:20px}
+  .brand small{display:none}
+  .container{padding:16px 9px 60px}
+  .panel{padding:14px;border-radius:14px}
+  .grid{grid-template-columns:1fr}
+  .title-card{grid-template-columns:60px minmax(0,1fr)}
+  .thumb{width:60px;height:90px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
 </style>
 </head>
 <body>
+<header class="topbar">
+<div class="brand">Kai<span>Flix</span> ✦<small>ADMIN</small></div>
+<nav class="topnav" aria-label="Admin sections">
+<a href="#loginPanel">🔐 Login</a>
+<a href="#addPanel">➕ Add</a>
+<a href="#catalogPanel">📚 Catalog</a>
+<a href="#reportsPanel">🚩 Reports</a>
+</nav>
+</header>
+
 <div class="container">
+<div class="page-head">
 <h1>🎬 KaiFlix Admin Panel</h1>
 <p class="hint">Manage movies, ratings, quality, TV series, anime, seasons and episodes.</p>
+</div>
 
-<section class="panel">
+<section class="panel" id="loginPanel">
 <h2>🔐 Admin Login</h2>
 <label for="password">Admin Password</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Enter admin password">
 <p class="hint">Password is used for protected requests and is not stored by this page.</p>
 </section>
 
-<section class="panel">
+<section class="panel" id="addPanel">
 <h2>➕ Add New Title</h2>
 <form id="addForm">
 <label for="title">Title *</label>
@@ -104,7 +164,7 @@ hr{border:0;border-top:1px solid #263449;margin:20px 0}
 </form>
 </section>
 
-<section class="panel">
+<section class="panel" id="catalogPanel">
 <h2>📚 Manage Catalog</h2>
 <label for="search">🔎 Search titles</label>
 <input id="search" type="search" placeholder="Search title, category, year or rating">
