@@ -301,6 +301,42 @@ footer{background:rgba(5,12,22,.45);-webkit-backdrop-filter:blur(16px);backdrop-
   .hero-info,.report-box,.report-fab{background:rgba(14,28,48,.98)}
   .report-modal{background:rgba(3,8,16,.85)}
 }
+
+/* ===== SMOOTHNESS TUNING (same look, less work for the browser) ===== */
+/* Lighter blur on the few glass surfaces that keep it; none on small repeated buttons */
+header{-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+.hero-info{-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+.search{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.report-fab{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
+.report-modal{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.report-box{-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
+.filters button,.hero-secondary,.back-btn,.ep-report{-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* Carousel: dim side posters with an overlay instead of animating a filter */
+.slide{will-change:transform,opacity;backface-visibility:hidden}
+.slide[data-pos="1"],.slide[data-pos="-1"]{filter:none}
+.slide::before{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;background:#050b15;opacity:0;pointer-events:none;transition:opacity .5s}
+.slide[data-pos="1"]::before,.slide[data-pos="-1"]::before{opacity:.5}
+
+/* Cards: cheaper shadows, no filter animation, entrance animation only for the first screenful */
+.card{box-shadow:var(--lg-rim),0 8px 18px rgba(0,0,0,.26)}
+.card:hover{box-shadow:var(--lg-rim),0 12px 24px rgba(0,0,0,.34),0 0 18px rgba(232,189,104,.12)}
+.card:hover .poster img{filter:none}
+.row .card:nth-child(n+7),.grid .card:nth-child(n+13){animation:none}
+
+/* Rows below the screen are not drawn until they are close; smoother horizontal swipes */
+.row-section{content-visibility:auto;contain-intrinsic-size:auto 400px}
+.row{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+
+/* Touch screens: no sticky hover effects after a tap */
+@media(hover:none){
+  .card:hover,.season-card:hover,.episode-card:hover{transform:none}
+  .card:hover .poster img{transform:none}
+}
+
+/* Moving colour fields only on large screens with a mouse */
+body::before,body::after{will-change:transform}
+@media(max-width:899px),(hover:none){body::before,body::after{animation:none}}
 </style>
 </head>
 
@@ -708,7 +744,9 @@ function addRow(label, list, seeAllCategory) {
 
   const row = document.createElement("div");
   row.className = "row";
-  list.slice(0, 20).forEach(t => row.appendChild(makeCard(t)));
+  const rowFragment = document.createDocumentFragment();
+  list.slice(0, 20).forEach(t => rowFragment.appendChild(makeCard(t)));
+  row.appendChild(rowFragment);
 
   section.append(head, row);
   rowsEl.appendChild(section);
@@ -745,7 +783,9 @@ function render() {
     addRow("TV Series", titles.filter(t => t.category === "TV Series"), "TV Series");
     addRow("Anime", titles.filter(t => t.category === "Anime"), "Anime");
   } else {
-    items.forEach(t => grid.appendChild(makeCard(t)));
+    const gridFragment = document.createDocumentFragment();
+    items.forEach(t => gridFragment.appendChild(makeCard(t)));
+    grid.appendChild(gridFragment);
   }
 
   empty.hidden = items.length > 0;
@@ -1424,13 +1464,18 @@ document.querySelectorAll("[data-hero-cat]").forEach(link => {
 
 let wasSearching = false;
 
+let searchTimer = null;
+
 search.addEventListener("input", () => {
-  const searching = search.value.trim() !== "";
-  render();
-  if (searching && !wasSearching) {
-    catalog.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth"});
-  }
-  wasSearching = searching;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    const searching = search.value.trim() !== "";
+    render();
+    if (searching && !wasSearching) {
+      catalog.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth"});
+    }
+    wasSearching = searching;
+  }, 160);
 });
 
 document.getElementById("logo").addEventListener("click", () => {
