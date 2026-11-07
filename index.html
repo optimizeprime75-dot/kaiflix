@@ -211,6 +211,96 @@ footer strong{color:var(--gold)}
   html{scroll-behavior:auto!important}
   *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
+
+/* ===== LIQUID GLASS THEME (visual layer only: layout, content and features are unchanged) ===== */
+:root{
+  --lg-fill:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
+  --lg-border:rgba(255,255,255,.17);
+  --lg-rim:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.07),inset 1px 0 0 rgba(255,255,255,.12),inset -1px 0 0 rgba(255,255,255,.05);
+  --lg-blur:blur(22px) saturate(170%);
+}
+
+/* Soft colour fields that the glass picks up and refracts */
+body::before,body::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%}
+body::before{width:70vmax;height:70vmax;left:-26vmax;top:-22vmax;background:radial-gradient(circle,rgba(232,189,104,.22),transparent 62%);animation:lgDriftA 40s ease-in-out infinite alternate}
+body::after{width:80vmax;height:80vmax;right:-32vmax;bottom:-30vmax;background:radial-gradient(circle,rgba(60,130,250,.26),transparent 62%);animation:lgDriftB 48s ease-in-out infinite alternate}
+@keyframes lgDriftA{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(14vmax,10vmax,0) scale(1.12)}}
+@keyframes lgDriftB{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-12vmax,-9vmax,0) scale(1.1)}}
+
+/* Header and footer */
+header{background:rgba(10,22,40,.4);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border-bottom:1px solid var(--lg-border);box-shadow:inset 0 -1px 0 rgba(255,255,255,.05),0 8px 28px rgba(0,0,0,.28)}
+nav a{border:1px solid transparent}
+nav a:hover,nav a:focus-visible{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);box-shadow:var(--lg-rim)}
+footer{background:rgba(5,12,22,.45);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.1)}
+
+/* Hero */
+.hero{background:radial-gradient(ellipse at 50% 22%,rgba(110,160,255,.15),transparent 55%),radial-gradient(ellipse at 14% 100%,rgba(232,189,104,.11),transparent 50%);border-bottom:1px solid rgba(255,255,255,.08)}
+.search{border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);box-shadow:var(--lg-rim),0 8px 24px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
+.search:focus{background:rgba(255,255,255,.1);border-color:rgba(255,227,160,.65);box-shadow:var(--lg-rim),0 0 0 3px rgba(232,189,104,.14),0 8px 26px rgba(0,0,0,.28)}
+.slide{border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 28px rgba(0,0,0,.35)}
+.slide::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.24),rgba(255,255,255,0) 32%,rgba(255,255,255,0) 72%,rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.slide[data-pos="0"]{border-color:rgba(255,227,160,.6);box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 34px rgba(232,189,104,.16)}
+.hero-info{width:min(620px,92%);padding:16px 22px 18px;border-radius:24px;background:var(--lg-fill);border:1px solid var(--lg-border);box-shadow:var(--lg-rim),0 14px 36px rgba(0,0,0,.32);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur)}
+.dot{background:rgba(255,255,255,.28)}
+.dot.active{background:linear-gradient(90deg,#ffe9b0,#e8bd68);box-shadow:0 0 10px rgba(232,189,104,.5)}
+.hero-primary{border-radius:999px;border:1px solid rgba(255,255,255,.5);background:linear-gradient(145deg,#ffeab4,#dfb15a);box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -3px 8px rgba(150,100,25,.35),0 10px 26px rgba(232,189,104,.28)}
+.hero-secondary{border-radius:999px;color:#fff1cf;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.26);box-shadow:var(--lg-rim);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
+
+/* Filters */
+.filters button{border-radius:999px;color:#e3ecf8;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.17);box-shadow:var(--lg-rim);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.filters button:hover{border-color:rgba(255,227,160,.6);background:rgba(255,255,255,.12)}
+.filters button.active{color:#1a1405;border-color:rgba(255,255,255,.55);background:linear-gradient(145deg,#ffeab4,#dfb15a);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -2px 6px rgba(150,100,25,.3),0 8px 22px rgba(232,189,104,.24)}
+.see-all{color:#ffe3a0}
+
+/* Poster cards (light-weight glass: no blur per card, so long catalogs stay smooth) */
+.card{border-radius:16px;background:var(--lg-fill);border:1px solid var(--lg-border);box-shadow:var(--lg-rim),0 12px 28px rgba(0,0,0,.3)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,0) 30%)}
+.card:hover{border-color:rgba(255,227,160,.55);box-shadow:var(--lg-rim),0 18px 38px rgba(0,0,0,.42),0 0 26px rgba(232,189,104,.16)}
+.info a,.action-btn{border-radius:11px;background:linear-gradient(145deg,#ffe6aa,#d8a74d);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 5px 14px rgba(232,189,104,.2)}
+.info a.download,.episode-actions a.download{color:#f3e6c6;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);box-shadow:var(--lg-rim)}
+.quality{background:rgba(23,70,56,.74);border:1px solid rgba(138,229,185,.38)}
+.quality.hall{background:rgba(82,58,24,.78);border:1px solid rgba(241,206,136,.42)}
+.type-badge{background:rgba(22,44,70,.76);border:1px solid rgba(198,217,239,.32)}
+.imdb-rating.on-poster{background:rgba(6,14,26,.7);border:1px solid rgba(255,207,98,.38)}
+
+/* Detail pages */
+.detail-poster{border:1px solid rgba(255,255,255,.22);box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.detail-description .detail-rating{background:rgba(255,207,98,.08);border:1px solid rgba(255,207,98,.38);box-shadow:var(--lg-rim);border-radius:999px}
+.season-card,.episode-card{border-radius:16px;background:var(--lg-fill);border:1px solid var(--lg-border);box-shadow:var(--lg-rim),0 10px 24px rgba(0,0,0,.26)}
+.season-card:hover,.episode-card:hover{border-color:rgba(255,227,160,.5)}
+.episode-actions a{border-radius:999px;background:linear-gradient(145deg,#ffe6aa,#d8a74d);box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}
+.back-btn,.ep-report{border-radius:999px;color:#f6e7c4;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);box-shadow:var(--lg-rim);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.back-btn:hover,.ep-report:hover{border-color:rgba(255,227,160,.6)}
+
+/* Report button and form */
+.report-fab{color:#ffeab8;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);box-shadow:var(--lg-rim),0 12px 32px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%)}
+.report-fab:hover,.report-fab:focus-visible{background:rgba(255,255,255,.17);border-color:rgba(255,227,160,.7)}
+.report-modal{background:rgba(3,8,16,.5);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%)}
+.report-box{border-radius:26px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.05)),rgba(12,26,46,.55);border:1px solid rgba(255,255,255,.24);box-shadow:var(--lg-rim),0 30px 80px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%)}
+.report-box input,.report-box select,.report-box textarea{border-radius:13px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 2px 5px rgba(0,0,0,.22)}
+.report-box input:focus,.report-box select:focus,.report-box textarea:focus{background:rgba(255,255,255,.1);border-color:rgba(255,227,160,.65);box-shadow:inset 0 2px 5px rgba(0,0,0,.18),0 0 0 3px rgba(232,189,104,.14)}
+.report-box select option{background:#0d1a2b;color:#fff}
+.report-close{border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.26);box-shadow:var(--lg-rim)}
+.report-submit{border-radius:999px;border:1px solid rgba(255,255,255,.5);background:linear-gradient(145deg,#ffeab4,#dfb15a);box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -3px 8px rgba(150,100,25,.35),0 10px 26px rgba(232,189,104,.26)}
+
+/* Loading skeleton in glass tones */
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.06) 75%);background-size:200% 100%}
+
+/* Phones: keep the colour fields still to save battery */
+@media(max-width:600px){body::before,body::after{animation:none}}
+
+/* Fallback when the browser or the user's settings turn transparency off */
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  header,footer{background:rgba(8,18,32,.95)}
+  .hero-info,.report-box{background:rgba(14,28,48,.97)}
+  .report-fab{background:rgba(14,28,48,.97)}
+  .report-modal{background:rgba(3,8,16,.82)}
+}
+@media(prefers-reduced-transparency:reduce){
+  header,footer{background:rgba(8,18,32,.97)}
+  .hero-info,.report-box,.report-fab{background:rgba(14,28,48,.98)}
+  .report-modal{background:rgba(3,8,16,.85)}
+}
 </style>
 </head>
 
