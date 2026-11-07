@@ -1268,7 +1268,9 @@ async function openSeason(id) {
 
     if (token !== routeToken) return;
 
-    const title = titleData && titleData.title ? titleData.title : titleData;
+    const title = titleData && titleData.title && typeof titleData.title === "object"
+      ? titleData.title
+      : titleData;
     const episodes = getRows(episodesData, "episodes").slice().sort(
       (a,b) => Number(a.episode_number || 0) - Number(b.episode_number || 0)
     );
@@ -1446,4 +1448,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
-</html>
+  </html>
