@@ -337,6 +337,28 @@ header{-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16
 /* Moving colour fields only on large screens with a mouse */
 body::before,body::after{will-change:transform}
 @media(max-width:899px),(hover:none){body::before,body::after{animation:none}}
+
+/* ===== MOVIE DETAILS PAGE ===== */
+.movie-page{position:relative;isolation:isolate;overflow:hidden;border:1px solid var(--lg-border);border-radius:26px;background:rgba(7,17,31,.55);box-shadow:var(--lg-rim),0 24px 60px rgba(0,0,0,.4);animation:kaiCardEnter .4s ease both}
+.movie-backdrop{position:absolute;inset:0;z-index:-1;overflow:hidden;background:#0b1727}
+.movie-backdrop img{display:block;width:100%;height:100%;object-fit:cover;opacity:.62}
+.movie-backdrop.from-poster img{filter:blur(28px) saturate(1.3);transform:scale(1.25);opacity:.55}
+.movie-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,17,31,.22) 0%,rgba(7,17,31,.78) 62%,rgba(7,17,31,.96) 100%)}
+.movie-content{display:grid;grid-template-columns:minmax(150px,270px) minmax(0,1fr);gap:clamp(18px,4vw,36px);align-items:start;padding:clamp(18px,4.5vw,44px)}
+.movie-poster{width:100%;border:1px solid rgba(255,255,255,.26);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.55)}
+.movie-info{min-width:0;padding:clamp(16px,3vw,26px);border:1px solid var(--lg-border);border-radius:22px;background:var(--lg-fill);box-shadow:var(--lg-rim),0 14px 36px rgba(0,0,0,.3);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+.movie-info h1{margin:0 0 12px}
+.movie-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.movie-chip{display:inline-block;padding:5px 11px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(255,255,255,.08);color:#e6edf7;font-size:11px;font-weight:800;letter-spacing:.4px}
+.movie-desc-title{margin:18px 0 6px;color:var(--gold);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.detail-description .movie-desc{margin:0;color:#d3deec;font-size:14px;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
+.movie-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+@media(max-width:600px){
+  .movie-content{grid-template-columns:1fr;justify-items:center}
+  .movie-poster{width:min(58%,230px)}
+  .movie-info{width:100%}
+  .movie-actions .hero-primary,.movie-actions .hero-secondary{flex:1}
+}
 </style>
 </head>
 
@@ -692,26 +714,18 @@ function makeCard(t) {
   meta.textContent = [t.category || "Uncategorized", t.year || "Year unknown"].join(" · ");
   info.appendChild(meta);
 
-  if (t.category === "Movie") {
-    const watch = safeUrl(t.watch_url);
-    if (watch) info.appendChild(makeLink(watch, "▶ Watch", "watch"));
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "action-btn";
+  open.textContent = "View Details →";
+  open.addEventListener("click", () => openSeriesPage(t));
+  info.appendChild(open);
 
-    const download = safeUrl(t.download_url);
-    if (download) info.appendChild(makeLink(download, "↓ Download", "download"));
-  } else {
-    const open = document.createElement("button");
-    open.type = "button";
-    open.className = "action-btn";
-    open.textContent = "View Details →";
-    open.addEventListener("click", () => openSeriesPage(t));
-    info.appendChild(open);
-
-    card.style.cursor = "pointer";
-    card.addEventListener("click", event => {
-      if (event.target.closest("a,button")) return;
-      openSeriesPage(t);
-    });
-  }
+  card.style.cursor = "pointer";
+  card.addEventListener("click", event => {
+    if (event.target.closest("a,button")) return;
+    openSeriesPage(t);
+  });
 
   card.append(poster, info);
   return card;
@@ -841,6 +855,13 @@ function updateHeroInfo() {
 
     const download = safeUrl(t.download_url);
     if (download) actions.appendChild(makeLink(download, "↓ Download", "hero-secondary"));
+
+    const details = document.createElement("button");
+    details.type = "button";
+    details.className = "hero-secondary";
+    details.textContent = "ℹ View Details";
+    details.addEventListener("click", () => openSeriesPage(t));
+    actions.appendChild(details);
   } else {
     const open = document.createElement("button");
     open.type = "button";
@@ -901,7 +922,7 @@ function buildHero() {
 
     slide.addEventListener("click", () => {
       if (i === current) {
-        if (isSeries(t)) openSeriesPage(t);
+        openSeriesPage(t);
       } else {
         goTo(i);
       }
@@ -1154,6 +1175,115 @@ function makeBackButton() {
   };
 }
 
+function renderMovieDetails(t) {
+  window.scrollTo({top: 0, left: 0, behavior: "auto"});
+  setReportContext(t.category, t.title);
+
+  setBreadcrumb([
+    {label:"Home",action:showCatalog},
+    {label:t.category || "Movie",action:() => {
+      setCategory(t.category || "All");
+      showCatalog();
+    }},
+    {label:t.title || "Details"}
+  ]);
+
+  const page = document.createElement("article");
+  page.className = "movie-page";
+
+  // Backdrop: the saved backdrop image, or the poster (blurred) when there is none
+  const backdropUrl = safeUrl(t.backdrop_url);
+  const posterUrl = safeUrl(t.poster_url);
+  const firstSource = backdropUrl || posterUrl;
+
+  if (firstSource) {
+    const backdrop = document.createElement("div");
+    backdrop.className = "movie-backdrop" + (backdropUrl ? "" : " from-poster");
+
+    const img = document.createElement("img");
+    img.alt = "";
+    img.decoding = "async";
+
+    let triedPoster = !backdropUrl;
+    img.addEventListener("error", () => {
+      if (!triedPoster && posterUrl) {
+        triedPoster = true;
+        backdrop.classList.add("from-poster");
+        img.src = posterUrl;
+      } else {
+        backdrop.remove();
+      }
+    });
+
+    img.src = firstSource;
+    backdrop.appendChild(img);
+    page.appendChild(backdrop);
+  }
+
+  const content = document.createElement("div");
+  content.className = "movie-content";
+
+  const poster = makePoster(t.poster_url, t.title);
+  poster.className = "poster movie-poster";
+  content.appendChild(poster);
+
+  const info = document.createElement("div");
+  info.className = "movie-info detail-description";
+
+  const heading = document.createElement("h1");
+  heading.textContent = t.title || "Untitled";
+  info.appendChild(heading);
+
+  const chips = document.createElement("div");
+  chips.className = "movie-chips";
+
+  if (t.year) {
+    const year = document.createElement("span");
+    year.className = "movie-chip";
+    year.textContent = String(t.year);
+    chips.appendChild(year);
+  }
+
+  const quality = document.createElement("span");
+  const isHall = String(t.quality || "WEB-DL").toUpperCase() === "HALL PRINT";
+  quality.className = "quality" + (isHall ? " hall" : "");
+  quality.textContent = isHall ? "HALL PRINT" : (t.quality || "WEB-DL");
+  chips.appendChild(quality);
+
+  info.appendChild(chips);
+
+  const rating = makeImdbRating(t.imdb_rating, true);
+  if (rating) info.appendChild(rating);
+
+  const story = typeof t.description === "string" ? t.description.trim() : "";
+  if (story) {
+    const storyHeading = document.createElement("h2");
+    storyHeading.className = "movie-desc-title";
+    storyHeading.textContent = "Overview";
+
+    const storyText = document.createElement("p");
+    storyText.className = "movie-desc";
+    storyText.textContent = story;
+
+    info.append(storyHeading, storyText);
+  }
+
+  const watch = safeUrl(t.watch_url);
+  const download = safeUrl(t.download_url);
+
+  if (watch || download) {
+    const actions = document.createElement("div");
+    actions.className = "movie-actions";
+    if (watch) actions.appendChild(makeLink(watch, "▶ Watch Now", "hero-primary"));
+    if (download) actions.appendChild(makeLink(download, "↓ Download", "hero-secondary"));
+    info.appendChild(actions);
+  }
+
+  content.appendChild(info);
+  page.appendChild(content);
+  detailContent.appendChild(page);
+}
+
 async function openTitle(id) {
   const token = ++routeToken;
   showDetailLoading("Loading title details...");
@@ -1178,6 +1308,12 @@ async function openTitle(id) {
 
       throw new Error("Unexpected title response from " + API_BASE_URL +
         ". Open /api/titles/" + encodeURIComponent(id) + " and check the JSON.");
+    }
+
+    if (t.category === "Movie") {
+      detailStatus.textContent = "";
+      renderMovieDetails(t);
+      return;
     }
 
     let seasons = [];
@@ -1493,4 +1629,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
-  </html>
+</html>
