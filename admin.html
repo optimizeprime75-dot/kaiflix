@@ -35,9 +35,10 @@ h3{font-size:16px}
 
 /* FORMS */
 label{display:block;margin:14px 0 6px;color:#cbd5e1;font-size:13px;font-weight:700}
-input,select{width:100%;min-width:0;padding:12px 13px;border:1px solid #34445a;border-radius:10px;background:#07111f;color:#fff;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
-input::placeholder{color:#64748b}
-input:focus,select:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(232,189,104,.12)}
+input,select,textarea{width:100%;min-width:0;padding:12px 13px;border:1px solid #34445a;border-radius:10px;background:#07111f;color:#fff;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+input::placeholder,textarea::placeholder{color:#64748b}
+textarea{min-height:96px;resize:vertical;line-height:1.5;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(232,189,104,.12)}
 
 /* BUTTONS */
 button{padding:11px 14px;border:0;border-radius:10px;background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));color:#15120b;font-weight:800;font-size:14px;cursor:pointer;transition:transform .2s,filter .2s,box-shadow .2s}
@@ -159,6 +160,13 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <label for="download">Download URL (optional)</label>
 <input id="download" type="url" placeholder="https://example.com/download">
 
+<label for="backdrop">Backdrop Image URL (optional)</label>
+<input id="backdrop" type="url" placeholder="https://image.tmdb.org/t/p/w1280/...">
+<p class="hint">Wide background for the Movie Details page. If empty, the poster is used.</p>
+
+<label for="description">Description (optional)</label>
+<textarea id="description" maxlength="2000" rows="4" placeholder="Short story summary shown on the Movie Details page"></textarea>
+
 <button class="full" id="addButton">Add Title</button>
 <div id="addMessage" class="message" role="status"></div>
 </form>
@@ -202,6 +210,13 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <input id="editWatch" type="url">
 <label for="editDownload">Download URL</label>
 <input id="editDownload" type="url">
+
+<label for="editBackdrop">Backdrop Image URL (optional)</label>
+<input id="editBackdrop" type="url" placeholder="https://image.tmdb.org/t/p/w1280/...">
+<p class="hint">Wide background for the Movie Details page. If empty, the poster is used.</p>
+
+<label for="editDescription">Description (optional)</label>
+<textarea id="editDescription" maxlength="2000" rows="4" placeholder="Short story summary shown on the Movie Details page"></textarea>
 
 <div class="actions">
 <button id="saveEdit">💾 Save Changes</button>
@@ -296,6 +311,7 @@ const $=id=>document.getElementById(id);
 const API="/api";
 let titles=[];
 let editingId=null;
+let editExtrasLoaded=false;
 let activeTitle=null;
 let activeSeason=null;
 let seasons=[];
@@ -510,6 +526,28 @@ function openEdit(t){
   $("editPanel").hidden=false;
   updateEditPreview();
   $("editPanel").scrollIntoView({behavior:"smooth"});
+  loadEditExtras(t.id);
+}
+async function loadEditExtras(id){
+  editExtrasLoaded=false;
+  $("editBackdrop").value="";
+  $("editDescription").value="";
+  $("editBackdrop").disabled=true;
+  $("editDescription").disabled=true;
+  try{
+    const full=await api("/titles/"+id);
+    if(editingId!==id)return;
+    $("editBackdrop").value=full.backdrop_url||"";
+    $("editDescription").value=full.description||"";
+    editExtrasLoaded=true;
+  }catch(e){
+    if(editingId===id)msg("editMessage","Could not load the saved description and backdrop. They stay unchanged unless you type new ones.","error");
+  }finally{
+    if(editingId===id){
+      $("editBackdrop").disabled=false;
+      $("editDescription").disabled=false;
+    }
+  }
 }
 async function deleteTitle(t){
   const opts=adminOptions("DELETE");
@@ -550,7 +588,9 @@ $("addForm").addEventListener("submit",async e=>{
     imdb_rating:rating,
     poster_url:$("poster").value.trim()||null,
     watch_url:$("watch").value.trim()||null,
-    download_url:$("download").value.trim()||null
+    download_url:$("download").value.trim()||null,
+    backdrop_url:$("backdrop").value.trim()||null,
+    description:$("description").value.trim()||null
   });
   if(!opts)return;
 
@@ -581,7 +621,7 @@ $("editForm").addEventListener("submit",async e=>{
     return;
   }
 
-  const opts=adminOptions("PUT",{
+  const editBody={
     title:$("editTitle").value.trim(),
     category:$("editCategory").value,
     quality:$("editQuality").value,
@@ -590,7 +630,12 @@ $("editForm").addEventListener("submit",async e=>{
     poster_url:$("editPoster").value.trim()||null,
     watch_url:$("editWatch").value.trim()||null,
     download_url:$("editDownload").value.trim()||null
-  });
+  };
+  const extraBackdrop=$("editBackdrop").value.trim();
+  const extraDescription=$("editDescription").value.trim();
+  if(editExtrasLoaded||extraBackdrop)editBody.backdrop_url=extraBackdrop||null;
+  if(editExtrasLoaded||extraDescription)editBody.description=extraDescription||null;
+  const opts=adminOptions("PUT",editBody);
   if(!opts)return;
 
   $("saveEdit").disabled=true;
