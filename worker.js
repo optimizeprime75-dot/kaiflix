@@ -119,6 +119,13 @@ function validateTitle(body) {
     }
   }
 
+  // Genres and custom categories are optional lists of ids.
+  const genres = parseIdList(body.genre_ids, "Genres");
+  if (genres.error) return { error: genres.error };
+
+  const categories = parseIdList(body.custom_category_ids, "Custom categories");
+  if (categories.error) return { error: categories.error };
+
   // IMDb rating is optional. Valid range: 0 to 10.
   let imdb_rating = null;
 
@@ -153,6 +160,8 @@ function validateTitle(body) {
       imdb_rating,
       description,
       backdrop_url,
+      genre_ids: genres.ids,
+      custom_category_ids: categories.ids,
     },
   };
 }
@@ -288,6 +297,159 @@ async function hashVisitor(request) {
     .join("");
 }
 
+/* ============================================================
+   GENRES AND CUSTOM CATEGORIES (both completely optional)
+   The table and column names below are fixed in this file and are
+   never taken from the request, so they are safe to put in SQL text.
+   ============================================================ */
+
+const GENRE_TAX = {
+  table: "genres",
+  link: "title_genres",
+  column: "genre_id",
+  label: "Genre",
+  maxLength: 40,
+};
+
+const CATEGORY_TAX = {
+  table: "custom_categories",
+  link: "title_custom_categories",
+  column: "category_id",
+  label: "Custom category",
+  maxLength: 60,
+};
+
+const MAX_CHOICES_PER_TITLE = 20;
+const MAX_TITLES_PER_REQUEST = 90;
+
+function cleanTaxonomyName(value, tax) {
+  if (typeof value !== "string") {
+    return { error: `${tax.label} name is required` };
+  }
+
+  const name = value.replace(/\s+/g, " ").trim();
+
+  if (!name) return { error: `${tax.label} name is required` };
+
+  if (name.length > tax.maxLength) {
+    return {
+      error: `${tax.label} name must be at most ${tax.maxLength} characters`,
+    };
+  }
+
+  if (/[\u0000-\u001f\u007f<>]/.test(name)) {
+    return { error: `${tax.label} name contains invalid characters` };
+  }
+
+  return { name };
+}
+
+// undefined = the key was not sent (leave things unchanged), [] = clear all.
+function parseIdList(value, label, max = MAX_CHOICES_PER_TITLE) {
+  if (value === undefined) return { ids: undefined };
+  if (value === null) return { ids: [] };
+
+  if (!Array.isArray(value)) return { error: `${label} must be a list` };
+
+  const ids = [];
+
+  for (const item of value) {
+    const id = validPositiveInteger(item);
+    if (!id) return { error: `${label} contains an invalid id` };
+    if (!ids.includes(id)) ids.push(id);
+  }
+
+  if (ids.length > max) {
+    return { error: `${label}: choose at most ${max} items` };
+  }
+
+  return { ids };
+}
+
+async function allIdsExist(db, table, ids) {
+  if (!ids.length) return true;
+
+  const marks = ids.map(() => "?").join(", ");
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS total FROM ${table} WHERE id IN (${marks})`
+  ).bind(...ids).first();
+
+  return Boolean(row) && row.total === ids.length;
+}
+
+async function checkTaxonomyChoices(db, choices) {
+  if (
+    choices.genre_ids &&
+    !(await allIdsExist(db, GENRE_TAX.table, choices.genre_ids))
+  ) {
+    return "One or more selected genres do not exist";
+  }
+
+  if (
+    choices.custom_category_ids &&
+    !(await allIdsExist(db, CATEGORY_TAX.table, choices.custom_category_ids))
+  ) {
+    return "One or more selected custom categories do not exist";
+  }
+
+  return null;
+}
+
+async function replaceTitleLinks(db, tax, titleId, ids) {
+  const statements = [
+    db.prepare(`DELETE FROM ${tax.link} WHERE title_id = ?`).bind(titleId),
+  ];
+
+  for (const id of ids) {
+    statements.push(
+      db.prepare(
+        `INSERT OR IGNORE INTO ${tax.link} (title_id, ${tax.column})
+         VALUES (?, ?)`
+      ).bind(titleId, id)
+    );
+  }
+
+  await db.batch(statements);
+}
+
+// A new title with nothing chosen needs no extra work at all.
+async function saveTaxonomyChoices(db, titleId, choices, isNewTitle) {
+  const pairs = [
+    [GENRE_TAX, choices.genre_ids],
+    [CATEGORY_TAX, choices.custom_category_ids],
+  ];
+
+  for (const [tax, ids] of pairs) {
+    if (ids === undefined) continue;
+    if (isNewTitle && ids.length === 0) continue;
+    await replaceTitleLinks(db, tax, titleId, ids);
+  }
+}
+
+// If the new tables do not exist yet, a title page still loads (with empty lists).
+async function readTitleTaxonomy(db, titleId) {
+  const read = async (tax) => {
+    try {
+      const result = await db.prepare(
+        `SELECT x.id, x.name
+         FROM ${tax.link} l
+         JOIN ${tax.table} x ON x.id = l.${tax.column}
+         WHERE l.title_id = ?
+         ORDER BY x.name COLLATE NOCASE`
+      ).bind(titleId).all();
+
+      return result.results;
+    } catch {
+      return [];
+    }
+  };
+
+  return {
+    genres: await read(GENRE_TAX),
+    custom_categories: await read(CATEGORY_TAX),
+  };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -352,6 +514,9 @@ export default {
 
         const t = checked.value;
 
+        const badChoice = await checkTaxonomyChoices(env.DB, t);
+        if (badChoice) return json({ error: badChoice }, 400);
+
         const result = await env.DB.prepare(
           `INSERT INTO titles
            (title, category, year, poster_url, watch_url,
@@ -369,6 +534,8 @@ export default {
           t.description ?? null,
           t.backdrop_url ?? null
         ).run();
+
+        await saveTaxonomyChoices(env.DB, result.meta.last_row_id, t, true);
 
         return json({
           success: true,
@@ -389,9 +556,9 @@ export default {
             "SELECT * FROM titles WHERE id = ?"
           ).bind(id).first();
 
-          return item
-            ? json(item)
-            : json({ error: "Title not found" }, 404);
+          if (!item) return json({ error: "Title not found" }, 404);
+
+          return json({ ...item, ...(await readTitleTaxonomy(env.DB, id)) });
         }
 
         if (request.method === "PUT") {
@@ -406,6 +573,9 @@ export default {
           }
 
           const t = checked.value;
+
+          const badChoice = await checkTaxonomyChoices(env.DB, t);
+          if (badChoice) return json({ error: badChoice }, 400);
 
           await env.DB.prepare(
             `UPDATE titles
@@ -431,6 +601,8 @@ export default {
             id
           ).run();
 
+          await saveTaxonomyChoices(env.DB, id, t, false);
+
           return json({
             success: true,
             id,
@@ -453,6 +625,16 @@ export default {
           await env.DB.prepare(
             "DELETE FROM seasons WHERE title_id = ?"
           ).bind(id).run();
+
+          for (const tax of [GENRE_TAX, CATEGORY_TAX]) {
+            try {
+              await env.DB.prepare(
+                `DELETE FROM ${tax.link} WHERE title_id = ?`
+              ).bind(id).run();
+            } catch {
+              // table not created yet: nothing to clean up
+            }
+          }
 
           await env.DB.prepare(
             "DELETE FROM titles WHERE id = ?"
@@ -695,6 +877,212 @@ export default {
             message: "Episode deleted successfully",
           });
         }
+      }
+
+      /* ---------- GENRES AND CUSTOM CATEGORIES ---------- */
+      // Reading the lists is public (names only). Every change needs the
+      // admin password, which is checked at the top for all POST/PUT/DELETE.
+
+      const taxonomyFor = (name) =>
+        name === "genres" ? GENRE_TAX : CATEGORY_TAX;
+
+      // List all, or create one.
+      match = path.match(/^\/api\/(genres|custom-categories)$/);
+
+      if (match) {
+        const tax = taxonomyFor(match[1]);
+
+        if (request.method === "GET") {
+          const result = await env.DB.prepare(
+            `SELECT x.id, x.name, COUNT(l.title_id) AS title_count
+             FROM ${tax.table} x
+             LEFT JOIN ${tax.link} l ON l.${tax.column} = x.id
+             GROUP BY x.id, x.name
+             ORDER BY x.name COLLATE NOCASE`
+          ).all();
+
+          return json(result.results);
+        }
+
+        if (request.method === "POST") {
+          const parsed = await readBody(request);
+          if (parsed.error) return json({ error: parsed.error }, 400);
+
+          const cleaned = cleanTaxonomyName(parsed.body.name, tax);
+          if (cleaned.error) return json({ error: cleaned.error }, 400);
+
+          const duplicate = await env.DB.prepare(
+            `SELECT id FROM ${tax.table} WHERE name = ? COLLATE NOCASE`
+          ).bind(cleaned.name).first();
+
+          if (duplicate) {
+            return json({ error: `${tax.label} "${cleaned.name}" already exists` }, 409);
+          }
+
+          try {
+            const result = await env.DB.prepare(
+              `INSERT INTO ${tax.table} (name) VALUES (?)`
+            ).bind(cleaned.name).run();
+
+            return json({
+              success: true,
+              id: result.meta.last_row_id,
+              name: cleaned.name,
+            }, 201);
+          } catch (error) {
+            if (error && error.message && error.message.includes("UNIQUE")) {
+              return json({ error: `${tax.label} "${cleaned.name}" already exists` }, 409);
+            }
+            throw error;
+          }
+        }
+      }
+
+      // Rename or delete one. Deleting only removes the links, never the titles.
+      match = path.match(/^\/api\/(genres|custom-categories)\/(\d+)$/);
+
+      if (match) {
+        const tax = taxonomyFor(match[1]);
+        const id = validPositiveInteger(match[2]);
+        if (!id) return json({ error: `Invalid ${tax.label.toLowerCase()} ID` }, 400);
+
+        if (request.method === "PUT") {
+          const parsed = await readBody(request);
+          if (parsed.error) return json({ error: parsed.error }, 400);
+
+          const cleaned = cleanTaxonomyName(parsed.body.name, tax);
+          if (cleaned.error) return json({ error: cleaned.error }, 400);
+
+          if (!(await exists(env.DB, tax.table, id))) {
+            return json({ error: `${tax.label} not found` }, 404);
+          }
+
+          const duplicate = await env.DB.prepare(
+            `SELECT id FROM ${tax.table} WHERE name = ? COLLATE NOCASE AND id != ?`
+          ).bind(cleaned.name, id).first();
+
+          if (duplicate) {
+            return json({ error: `${tax.label} "${cleaned.name}" already exists` }, 409);
+          }
+
+          try {
+            await env.DB.prepare(
+              `UPDATE ${tax.table} SET name = ? WHERE id = ?`
+            ).bind(cleaned.name, id).run();
+          } catch (error) {
+            if (error && error.message && error.message.includes("UNIQUE")) {
+              return json({ error: `${tax.label} "${cleaned.name}" already exists` }, 409);
+            }
+            throw error;
+          }
+
+          return json({ success: true, id, name: cleaned.name });
+        }
+
+        if (request.method === "DELETE") {
+          if (!(await exists(env.DB, tax.table, id))) {
+            return json({ error: `${tax.label} not found` }, 404);
+          }
+
+          await env.DB.batch([
+            env.DB.prepare(
+              `DELETE FROM ${tax.link} WHERE ${tax.column} = ?`
+            ).bind(id),
+            env.DB.prepare(
+              `DELETE FROM ${tax.table} WHERE id = ?`
+            ).bind(id),
+          ]);
+
+          return json({
+            success: true,
+            id,
+            message: `${tax.label} deleted. Titles were not changed.`,
+          });
+        }
+      }
+
+      // Titles that belong to a genre or custom category: list or add several.
+      match = path.match(/^\/api\/(genres|custom-categories)\/(\d+)\/titles$/);
+
+      if (match) {
+        const tax = taxonomyFor(match[1]);
+        const id = validPositiveInteger(match[2]);
+        if (!id) return json({ error: `Invalid ${tax.label.toLowerCase()} ID` }, 400);
+
+        if (request.method === "GET") {
+          if (!(await exists(env.DB, tax.table, id))) {
+            return json({ error: `${tax.label} not found` }, 404);
+          }
+
+          const result = await env.DB.prepare(
+            `SELECT t.id, t.title, t.category, t.year
+             FROM ${tax.link} l
+             JOIN titles t ON t.id = l.title_id
+             WHERE l.${tax.column} = ?
+             ORDER BY t.title COLLATE NOCASE`
+          ).bind(id).all();
+
+          return json(result.results);
+        }
+
+        if (request.method === "POST") {
+          const parsed = await readBody(request);
+          if (parsed.error) return json({ error: parsed.error }, 400);
+
+          const list = parseIdList(
+            parsed.body.title_ids,
+            "Titles",
+            MAX_TITLES_PER_REQUEST
+          );
+
+          if (list.error) return json({ error: list.error }, 400);
+
+          if (!list.ids || list.ids.length === 0) {
+            return json({ error: "Choose at least one title" }, 400);
+          }
+
+          if (!(await exists(env.DB, tax.table, id))) {
+            return json({ error: `${tax.label} not found` }, 404);
+          }
+
+          if (!(await allIdsExist(env.DB, "titles", list.ids))) {
+            return json({ error: "One or more selected titles do not exist" }, 400);
+          }
+
+          await env.DB.batch(
+            list.ids.map((titleId) =>
+              env.DB.prepare(
+                `INSERT OR IGNORE INTO ${tax.link} (title_id, ${tax.column})
+                 VALUES (?, ?)`
+              ).bind(titleId, id)
+            )
+          );
+
+          return json({ success: true, id, added: list.ids.length }, 201);
+        }
+      }
+
+      // Take one title out of a genre or custom category (the title itself stays).
+      match = path.match(
+        /^\/api\/(genres|custom-categories)\/(\d+)\/titles\/(\d+)$/
+      );
+
+      if (match && request.method === "DELETE") {
+        const tax = taxonomyFor(match[1]);
+        const id = validPositiveInteger(match[2]);
+        const titleId = validPositiveInteger(match[3]);
+
+        if (!id || !titleId) return json({ error: "Invalid ID" }, 400);
+
+        if (!(await exists(env.DB, tax.table, id))) {
+          return json({ error: `${tax.label} not found` }, 404);
+        }
+
+        await env.DB.prepare(
+          `DELETE FROM ${tax.link} WHERE ${tax.column} = ? AND title_id = ?`
+        ).bind(id, titleId).run();
+
+        return json({ success: true, id, title_id: titleId });
       }
 
       /* ---------- VISITOR REPORTS ---------- */
