@@ -84,6 +84,27 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 .report-status-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;margin-top:12px}
 .report-status-row label{margin:0}
 
+/* GENRES / CUSTOM CATEGORIES */
+.picker{margin-top:16px}
+.picker-label{display:block;margin:0 0 8px;color:#cbd5e1;font-size:13px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips:not(:empty){margin-bottom:9px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 6px 5px 11px;border:1px solid rgba(232,189,104,.45);border-radius:999px;background:rgba(232,189,104,.12);color:var(--gold-light);font-size:12px;font-weight:800}
+.chip button{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:10px;line-height:1;box-shadow:none}
+.picker-list{max-height:176px;margin-top:8px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:rgba(7,17,31,.7)}
+.picker-option{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:0;background:transparent;color:#e2e8f0;font-size:14px;font-weight:600;text-align:left;box-shadow:none}
+.picker-option:hover:not(:disabled){background:rgba(232,189,104,.1);transform:none;filter:none;box-shadow:none}
+.picker-option+.picker-option{border-top:1px solid rgba(38,58,82,.7)}
+.picker-option .box{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto;border:1px solid #64748b;border-radius:5px;font-size:12px;font-weight:900}
+.picker-option.on{color:var(--gold-light)}
+.picker-option.on .box{border-color:transparent;background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));color:#15120b}
+.picker-option .sub{margin-left:auto;color:var(--muted);font-size:12px;font-weight:600;white-space:nowrap}
+.picker-create{color:var(--gold-light);font-weight:800}
+.picker-empty{padding:12px;color:var(--muted);font-size:13px}
+.member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.member-row button{flex:0 0 auto}
+.member-name{min-width:0;overflow-wrap:anywhere;font-weight:700}
+
 @media(max-width:520px){
   .topbar{padding:10px 12px}
   .brand{font-size:20px}
@@ -107,6 +128,8 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <a href="#loginPanel">🔐 Login</a>
 <a href="#addPanel">➕ Add</a>
 <a href="#catalogPanel">📚 Catalog</a>
+<a href="#genresPanel">🏷️ Genres</a>
+<a href="#categoriesPanel">🗂️ Categories</a>
 <a href="#reportsPanel">🚩 Reports</a>
 </nav>
 </header>
@@ -167,6 +190,9 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <label for="description">Description (optional)</label>
 <textarea id="description" maxlength="2000" rows="4" placeholder="Short story summary shown on the Movie Details page"></textarea>
 
+<div id="addGenrePicker" class="picker"></div>
+<div id="addCategoryPicker" class="picker"></div>
+
 <button class="full" id="addButton">Add Title</button>
 <div id="addMessage" class="message" role="status"></div>
 </form>
@@ -217,6 +243,9 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 
 <label for="editDescription">Description (optional)</label>
 <textarea id="editDescription" maxlength="2000" rows="4" placeholder="Short story summary shown on the Movie Details page"></textarea>
+
+<div id="editGenrePicker" class="picker"></div>
+<div id="editCategoryPicker" class="picker"></div>
 
 <div class="actions">
 <button id="saveEdit">💾 Save Changes</button>
@@ -273,6 +302,10 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <h3>Episodes in this Season</h3>
 <div id="episodeList"></div>
 </section>
+
+<section class="panel" id="genresPanel"></section>
+
+<section class="panel" id="categoriesPanel"></section>
 
 <section class="panel" id="reportsPanel">
 <h2>🚩 Visitor Reports</h2>
@@ -534,11 +567,17 @@ async function loadEditExtras(id){
   $("editDescription").value="";
   $("editBackdrop").disabled=true;
   $("editDescription").disabled=true;
+  editGenres.setSelected([]);
+  editCats.setSelected([]);
+  editGenres.setLocked(true);
+  editCats.setLocked(true);
   try{
     const full=await api("/titles/"+id);
     if(editingId!==id)return;
     $("editBackdrop").value=full.backdrop_url||"";
     $("editDescription").value=full.description||"";
+    editGenres.setSelected((full.genres||[]).map(g=>g.id));
+    editCats.setSelected((full.custom_categories||[]).map(c=>c.id));
     editExtrasLoaded=true;
   }catch(e){
     if(editingId===id)msg("editMessage","Could not load the saved description and backdrop. They stay unchanged unless you type new ones.","error");
@@ -546,6 +585,8 @@ async function loadEditExtras(id){
     if(editingId===id){
       $("editBackdrop").disabled=false;
       $("editDescription").disabled=false;
+      editGenres.setLocked(false);
+      editCats.setLocked(false);
     }
   }
 }
@@ -590,7 +631,9 @@ $("addForm").addEventListener("submit",async e=>{
     watch_url:$("watch").value.trim()||null,
     download_url:$("download").value.trim()||null,
     backdrop_url:$("backdrop").value.trim()||null,
-    description:$("description").value.trim()||null
+    description:$("description").value.trim()||null,
+    genre_ids:addGenres.getSelected(),
+    custom_category_ids:addCats.getSelected()
   });
   if(!opts)return;
 
@@ -600,6 +643,8 @@ $("addForm").addEventListener("submit",async e=>{
   try{
     await api("/titles",opts);
     $("addForm").reset();
+    addGenres.clear();
+    addCats.clear();
     $("addPreview").hidden=true;
     $("addPreview").removeAttribute("src");
     $("addPreviewMsg").textContent="Enter a direct image URL.";
@@ -635,6 +680,10 @@ $("editForm").addEventListener("submit",async e=>{
   const extraDescription=$("editDescription").value.trim();
   if(editExtrasLoaded||extraBackdrop)editBody.backdrop_url=extraBackdrop||null;
   if(editExtrasLoaded||extraDescription)editBody.description=extraDescription||null;
+  const pickedGenres=editGenres.getSelected();
+  const pickedCats=editCats.getSelected();
+  if(editExtrasLoaded||pickedGenres.length)editBody.genre_ids=pickedGenres;
+  if(editExtrasLoaded||pickedCats.length)editBody.custom_category_ids=pickedCats;
   const opts=adminOptions("PUT",editBody);
   if(!opts)return;
 
@@ -980,7 +1029,430 @@ $("loadReports").addEventListener("click",loadReports);
 $("reportStatusFilter").addEventListener("change",()=>{if($("password").value)loadReports();});
 $("reportTypeFilter").addEventListener("change",()=>{if($("password").value)loadReports();});
 
+/* ===== Genres and Custom Categories (both optional for every title) ===== */
+const TAX={
+  genre:{route:"/genres",label:"Genre",plural:"Genres",title:"🏷️ Genre Management",panel:"genresPanel",
+    hint:"Create, rename and delete genres. Genres are optional for every title.",
+    placeholder:"New genre name (e.g. Action)",max:40,items:[],error:"",active:null,members:[],pick:new Set(),el:null,m:null},
+  category:{route:"/custom-categories",label:"Custom Category",plural:"Custom Categories",title:"🗂️ Custom Categories",panel:"categoriesPanel",
+    hint:"Make your own groups such as MCU or Star Wars, then add titles to them. Optional for every title.",
+    placeholder:"New category name (e.g. MCU)",max:60,items:[],error:"",active:null,members:[],pick:new Set(),el:null,m:null}
+};
+const pickers=[];
+
+function setText(el,text,type){
+  el.textContent=text;
+  el.className="message"+(type==="error"?" error":type==="info"?"":" ok");
+}
+async function loadTaxonomy(t){
+  try{
+    const data=await api(t.route);
+    t.items=Array.isArray(data)?data:[];
+    t.error="";
+  }catch(e){
+    t.items=[];
+    t.error="Could not load "+t.plural.toLowerCase()+": "+e.message;
+  }
+  if(t.active){
+    const fresh=t.items.find(i=>i.id===t.active.id);
+    if(fresh)t.active=fresh;
+  }
+  renderTaxList(t);
+  pickers.forEach(p=>p.refresh());
+}
+
+/* Search + multi-select used in the Add and Edit title forms */
+function makePicker(containerId,t){
+  const box=$(containerId);
+  let selected=[];
+  let locked=false;
+
+  const label=document.createElement("span");
+  label.className="picker-label";
+  label.textContent=t.plural+" (optional)";
+  const chips=document.createElement("div");
+  chips.className="chips";
+  const search=document.createElement("input");
+  search.type="search";
+  search.placeholder="Search "+t.plural.toLowerCase()+"...";
+  search.autocomplete="off";
+  const list=document.createElement("div");
+  list.className="picker-list";
+  const note=document.createElement("div");
+  note.className="hint";
+  box.append(label,chips,search,list,note);
+
+  function render(){
+    const known=new Set(t.items.map(i=>i.id));
+    selected=selected.filter(id=>known.has(id));
+
+    chips.replaceChildren();
+    selected.forEach(id=>{
+      const item=t.items.find(i=>i.id===id);
+      const chip=document.createElement("span");
+      chip.className="chip";
+      chip.append(item.name);
+      const x=document.createElement("button");
+      x.type="button";
+      x.textContent="✕";
+      x.disabled=locked;
+      x.setAttribute("aria-label","Remove "+item.name);
+      x.addEventListener("click",()=>{selected=selected.filter(v=>v!==id);render();});
+      chip.append(x);
+      chips.append(chip);
+    });
+
+    const typed=search.value.trim();
+    const q=typed.toLowerCase();
+    list.replaceChildren();
+
+    const matches=t.items.filter(i=>!q||i.name.toLowerCase().includes(q));
+    matches.forEach(item=>{
+      const on=selected.includes(item.id);
+      const row=document.createElement("button");
+      row.type="button";
+      row.className="picker-option"+(on?" on":"");
+      row.disabled=locked;
+      const mark=document.createElement("span");
+      mark.className="box";
+      mark.textContent=on?"✓":"";
+      row.append(mark,item.name);
+      row.addEventListener("click",()=>{
+        selected=on?selected.filter(v=>v!==item.id):[...selected,item.id];
+        render();
+      });
+      list.append(row);
+    });
+
+    if(typed&&!t.items.some(i=>i.name.toLowerCase()===q)){
+      const create=document.createElement("button");
+      create.type="button";
+      create.className="picker-option picker-create";
+      create.disabled=locked;
+      create.textContent="＋ Create “"+typed+"”";
+      create.addEventListener("click",createInline);
+      list.append(create);
+    }
+
+    if(!list.childNodes.length){
+      const none=document.createElement("div");
+      none.className="picker-empty";
+      none.textContent=t.error||("No "+t.plural.toLowerCase()+" yet. Create them in the "+t.title.replace(/^\S+\s/,"")+" section below.");
+      list.append(none);
+    }
+  }
+
+  async function createInline(){
+    const name=search.value.trim();
+    const opts=adminOptions("POST",{name});
+    if(!opts)return;
+    note.className="hint";
+    note.textContent="Creating...";
+    try{
+      const made=await api(t.route,opts);
+      await loadTaxonomy(t);
+      if(!selected.includes(made.id))selected.push(made.id);
+      search.value="";
+      note.className="hint ok";
+      note.textContent="Created and selected.";
+      render();
+    }catch(e){
+      note.className="hint error";
+      note.textContent=e.message;
+    }
+  }
+
+  search.addEventListener("input",render);
+  search.addEventListener("keydown",e=>{if(e.key==="Enter")e.preventDefault();});
+
+  const api_={
+    setSelected(ids){selected=Array.isArray(ids)?ids.slice():[];render();},
+    getSelected(){const known=new Set(t.items.map(i=>i.id));return selected.filter(id=>known.has(id));},
+    setLocked(value){locked=Boolean(value);render();},
+    clear(){selected=[];search.value="";note.textContent="";render();},
+    refresh:render
+  };
+  pickers.push(api_);
+  render();
+  return api_;
+}
+
+/* Management panel: add, rename, delete, and choose which titles belong */
+function initTaxPanel(t){
+  const section=$(t.panel);
+  const heading=document.createElement("h2");
+  heading.textContent=t.title;
+  const hint=document.createElement("p");
+  hint.className="hint";
+  hint.textContent=t.hint;
+
+  const form=document.createElement("form");
+  const label=document.createElement("label");
+  label.htmlFor=t.panel+"Name";
+  label.textContent="New "+t.label.toLowerCase();
+  const input=document.createElement("input");
+  input.id=t.panel+"Name";
+  input.maxLength=t.max;
+  input.placeholder=t.placeholder;
+  input.autocomplete="off";
+  const add=document.createElement("button");
+  add.className="full";
+  add.textContent="➕ Add "+t.label;
+  const formMsg=document.createElement("div");
+  formMsg.className="message";
+  formMsg.setAttribute("role","status");
+  form.append(label,input,add,formMsg);
+
+  const listMsg=document.createElement("div");
+  listMsg.className="message";
+  listMsg.textContent="Loading...";
+  const list=document.createElement("div");
+  const members=document.createElement("div");
+  members.className="card";
+  members.hidden=true;
+
+  section.append(heading,hint,form,listMsg,list,members);
+  t.el={input,add,formMsg,listMsg,list,members};
+
+  form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const opts=adminOptions("POST",{name:input.value});
+    if(!opts)return;
+    add.disabled=true;
+    setText(formMsg,"Adding...","info");
+    try{
+      const made=await api(t.route,opts);
+      input.value="";
+      setText(formMsg,"✅ "+t.label+" “"+made.name+"” added.");
+      await loadTaxonomy(t);
+    }catch(err){
+      setText(formMsg,err.message,"error");
+    }finally{
+      add.disabled=false;
+    }
+  });
+}
+function renderTaxList(t){
+  const list=t.el.list;
+  list.replaceChildren();
+  if(t.error){setText(t.el.listMsg,t.error,"error");return;}
+  setText(t.el.listMsg,"Total "+t.plural.toLowerCase()+": "+t.items.length,"info");
+
+  if(!t.items.length){
+    const none=document.createElement("p");
+    none.className="hint";
+    none.textContent="Nothing here yet. Add the first one above.";
+    list.append(none);
+    return;
+  }
+
+  t.items.forEach(item=>{
+    const c=document.createElement("article");
+    c.className="card";
+    const name=document.createElement("div");
+    name.textContent=item.name;
+    name.style.fontWeight="bold";
+    const meta=document.createElement("p");
+    meta.className="meta";
+    meta.textContent="Used in "+item.title_count+" title"+(item.title_count===1?"":"s")+" • ID "+item.id;
+    const actions=document.createElement("div");
+    actions.className="actions";
+    actions.append(
+      button("🎬 Manage Titles","green",()=>openMembers(t,item)),
+      button("✏️ Rename","secondary",()=>renameTax(t,item)),
+      button("🗑️ Delete","danger",()=>deleteTax(t,item))
+    );
+    c.append(name,meta,actions);
+    list.append(c);
+  });
+}
+async function renameTax(t,item){
+  const next=prompt("Rename "+t.label.toLowerCase()+":",item.name);
+  if(next===null)return;
+  const opts=adminOptions("PUT",{name:next});
+  if(!opts)return;
+  try{
+    await api(t.route+"/"+item.id,opts);
+    setText(t.el.listMsg,"Renamed to “"+next.trim()+"”.");
+    await loadTaxonomy(t);
+    if(t.active&&t.active.id===item.id)renderMembers(t);
+  }catch(e){
+    setText(t.el.listMsg,e.message,"error");
+  }
+}
+async function deleteTax(t,item){
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
+  const used=item.title_count?" It is used in "+item.title_count+" title"+(item.title_count===1?"":"s")+".":"";
+  if(!confirm('Delete '+t.label.toLowerCase()+' "'+item.name+'"?'+used+' The titles themselves will NOT be deleted.'))return;
+  try{
+    await api(t.route+"/"+item.id,opts);
+    if(t.active&&t.active.id===item.id){t.active=null;t.el.members.hidden=true;}
+    await loadTaxonomy(t);
+    setText(t.el.listMsg,t.label+" deleted. Titles were not changed.");
+  }catch(e){
+    setText(t.el.listMsg,e.message,"error");
+  }
+}
+
+/* "Manage Titles": see which titles are inside, add several at once, remove one */
+function openMembers(t,item){
+  t.active=item;
+  t.pick=new Set();
+  const box=t.el.members;
+  box.replaceChildren();
+  box.hidden=false;
+
+  const title=document.createElement("h3");
+  const current=document.createElement("div");
+  const addHeading=document.createElement("h3");
+  addHeading.textContent="➕ Add titles";
+  const search=document.createElement("input");
+  search.type="search";
+  search.placeholder="Search titles to add...";
+  search.autocomplete="off";
+  const candidates=document.createElement("div");
+  candidates.className="picker-list";
+  const addButton=document.createElement("button");
+  addButton.type="button";
+  addButton.className="full";
+  const msgEl=document.createElement("div");
+  msgEl.className="message";
+  msgEl.setAttribute("role","status");
+  const close=button("Close","secondary",()=>{box.hidden=true;t.active=null;});
+  close.classList.add("full");
+  box.append(title,current,addHeading,search,candidates,addButton,msgEl,close);
+
+  t.m={title,current,search,candidates,addButton,msgEl};
+  search.addEventListener("input",()=>renderCandidates(t));
+  search.addEventListener("keydown",e=>{if(e.key==="Enter")e.preventDefault();});
+  addButton.addEventListener("click",()=>addMembers(t));
+
+  setText(msgEl,"Loading...","info");
+  reloadMembers(t).then(()=>{setText(msgEl,"","info");});
+  box.scrollIntoView({behavior:"smooth"});
+}
+async function reloadMembers(t){
+  if(!t.active)return;
+  try{
+    const data=await api(t.route+"/"+t.active.id+"/titles");
+    t.members=Array.isArray(data)?data:[];
+  }catch(e){
+    t.members=[];
+    setText(t.m.msgEl,e.message,"error");
+  }
+  renderMembers(t);
+}
+function renderMembers(t){
+  if(!t.active||!t.m)return;
+  t.m.title.textContent="Titles in “"+t.active.name+"” ("+t.members.length+")";
+  t.m.current.replaceChildren();
+
+  if(!t.members.length){
+    const none=document.createElement("p");
+    none.className="hint";
+    none.textContent="No titles yet. Pick some below.";
+    t.m.current.append(none);
+  }
+
+  t.members.forEach(m=>{
+    const row=document.createElement("div");
+    row.className="member-row";
+    const info=document.createElement("div");
+    info.className="member-name";
+    info.textContent=m.title+" • "+m.category+(m.year?" • "+m.year:"");
+    row.append(info,button("Remove","danger",()=>removeMember(t,m)));
+    t.m.current.append(row);
+  });
+
+  renderCandidates(t);
+}
+function renderCandidates(t){
+  if(!t.m)return;
+  const inside=new Set(t.members.map(m=>m.id));
+  const q=t.m.search.value.trim().toLowerCase();
+  const matches=titles.filter(x=>!inside.has(x.id)&&(!q||[x.title,x.category,x.year].some(v=>String(v??"").toLowerCase().includes(q))));
+  const box=t.m.candidates;
+  box.replaceChildren();
+
+  matches.slice(0,100).forEach(x=>{
+    const on=t.pick.has(x.id);
+    const row=document.createElement("button");
+    row.type="button";
+    row.className="picker-option"+(on?" on":"");
+    const mark=document.createElement("span");
+    mark.className="box";
+    mark.textContent=on?"✓":"";
+    const sub=document.createElement("span");
+    sub.className="sub";
+    sub.textContent=x.category+(x.year?" • "+x.year:"");
+    row.append(mark,x.title,sub);
+    row.addEventListener("click",()=>{
+      if(on)t.pick.delete(x.id);else t.pick.add(x.id);
+      renderCandidates(t);
+    });
+    box.append(row);
+  });
+
+  if(!box.childNodes.length){
+    const none=document.createElement("div");
+    none.className="picker-empty";
+    none.textContent=titles.length?(q?"No matching titles.":"Every title is already in here."):"No titles loaded.";
+    box.append(none);
+  }else if(matches.length>100){
+    const more=document.createElement("div");
+    more.className="picker-empty";
+    more.textContent="Showing the first 100 of "+matches.length+". Search to narrow down.";
+    box.append(more);
+  }
+
+  t.m.addButton.textContent="➕ Add Selected ("+t.pick.size+")";
+  t.m.addButton.disabled=t.pick.size===0;
+}
+async function addMembers(t){
+  if(!t.active||!t.pick.size)return;
+  const ids=[...t.pick];
+  setText(t.m.msgEl,"Adding...","info");
+  t.m.addButton.disabled=true;
+  try{
+    for(let i=0;i<ids.length;i+=50){
+      const opts=adminOptions("POST",{title_ids:ids.slice(i,i+50)});
+      if(!opts){renderCandidates(t);setText(t.m.msgEl,"","info");return;}
+      await api(t.route+"/"+t.active.id+"/titles",opts);
+    }
+    t.pick=new Set();
+    await reloadMembers(t);
+    await loadTaxonomy(t);
+    setText(t.m.msgEl,"✅ Added "+ids.length+" title"+(ids.length===1?"":"s")+".");
+  }catch(e){
+    setText(t.m.msgEl,e.message,"error");
+    renderCandidates(t);
+  }
+}
+async function removeMember(t,m){
+  const opts=adminOptions("DELETE");
+  if(!opts)return;
+  if(!confirm('Remove "'+m.title+'" from "'+t.active.name+'"? The title itself is not deleted.'))return;
+  try{
+    await api(t.route+"/"+t.active.id+"/titles/"+m.id,opts);
+    await reloadMembers(t);
+    await loadTaxonomy(t);
+    setText(t.m.msgEl,"Removed.");
+  }catch(e){
+    setText(t.m.msgEl,e.message,"error");
+  }
+}
+
+initTaxPanel(TAX.genre);
+initTaxPanel(TAX.category);
+const addGenres=makePicker("addGenrePicker",TAX.genre);
+const addCats=makePicker("addCategoryPicker",TAX.category);
+const editGenres=makePicker("editGenrePicker",TAX.genre);
+const editCats=makePicker("editCategoryPicker",TAX.category);
+loadTaxonomy(TAX.genre);
+loadTaxonomy(TAX.category);
+
 loadTitles();
 </script>
 </body>
-</html>
+                            </html>
