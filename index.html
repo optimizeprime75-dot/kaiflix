@@ -359,6 +359,11 @@ body::before,body::after{will-change:transform}
   .movie-info{width:100%}
   .movie-actions .hero-primary,.movie-actions .hero-secondary{flex:1}
 }
+
+/* ===== GENRE AND CUSTOM CATEGORY TAGS (details pages) ===== */
+.tax-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tax-chip{display:inline-block;padding:5px 12px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(255,255,255,.07);color:#e6edf7;font-size:12px;font-weight:700;letter-spacing:.2px}
+.tax-chip.is-collection{border-color:rgba(232,189,104,.55);background:rgba(232,189,104,.13);color:var(--gold-light)}
 </style>
 </head>
 
@@ -1175,6 +1180,34 @@ function makeBackButton() {
   };
 }
 
+// Genre and custom-category tags. Returns nothing when none are chosen,
+// so titles without any choice show no empty section.
+function makeTaxonomyChips(t) {
+  const genres = Array.isArray(t.genres) ? t.genres.filter(g => g && g.name) : [];
+  const groups = Array.isArray(t.custom_categories) ? t.custom_categories.filter(c => c && c.name) : [];
+
+  if (!genres.length && !groups.length) return null;
+
+  const wrap = document.createElement("div");
+  wrap.className = "tax-chips";
+
+  genres.forEach(g => {
+    const chip = document.createElement("span");
+    chip.className = "tax-chip";
+    chip.textContent = g.name;
+    wrap.appendChild(chip);
+  });
+
+  groups.forEach(c => {
+    const chip = document.createElement("span");
+    chip.className = "tax-chip is-collection";
+    chip.textContent = "✦ " + c.name;
+    wrap.appendChild(chip);
+  });
+
+  return wrap;
+}
+
 function renderMovieDetails(t) {
   window.scrollTo({top: 0, left: 0, behavior: "auto"});
   setReportContext(t.category, t.title);
@@ -1254,6 +1287,9 @@ function renderMovieDetails(t) {
 
   const rating = makeImdbRating(t.imdb_rating, true);
   if (rating) info.appendChild(rating);
+
+  const taxChips = makeTaxonomyChips(t);
+  if (taxChips) info.appendChild(taxChips);
 
   const story = typeof t.description === "string" ? t.description.trim() : "";
   if (story) {
@@ -1364,6 +1400,9 @@ async function openTitle(id) {
 
     const rating = makeImdbRating(t.imdb_rating, true);
     if (rating) description.appendChild(rating);
+
+    const taxChips = makeTaxonomyChips(t);
+    if (taxChips) description.appendChild(taxChips);
 
     const intro = document.createElement("p");
     intro.textContent = "Choose a season below to explore episodes and their available Watch and Download links.";
