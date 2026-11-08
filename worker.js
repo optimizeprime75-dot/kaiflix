@@ -90,6 +90,35 @@ function validateTitle(body) {
     return { error: "Quality must be WEB-DL or HALL PRINT" };
   }
 
+  // Description and backdrop image are optional (used on the Movie Details page).
+  // A key that is missing means "leave the saved value unchanged" when editing;
+  // null or an empty text clears it.
+  let description;
+
+  if (body.description !== undefined) {
+    if (body.description === null || body.description === "") {
+      description = null;
+    } else if (typeof body.description === "string") {
+      description = body.description.trim() || null;
+
+      if (description && description.length > 2000) {
+        return { error: "Description must be at most 2000 characters" };
+      }
+    } else {
+      return { error: "Invalid description" };
+    }
+  }
+
+  let backdrop_url;
+
+  if (body.backdrop_url !== undefined) {
+    backdrop_url = validUrl(body.backdrop_url);
+
+    if (backdrop_url === false) {
+      return { error: "Backdrop URL must be a valid HTTP or HTTPS link" };
+    }
+  }
+
   // IMDb rating is optional. Valid range: 0 to 10.
   let imdb_rating = null;
 
@@ -122,6 +151,8 @@ function validateTitle(body) {
       download_url,
       quality,
       imdb_rating,
+      description,
+      backdrop_url,
     },
   };
 }
@@ -324,8 +355,8 @@ export default {
         const result = await env.DB.prepare(
           `INSERT INTO titles
            (title, category, year, poster_url, watch_url,
-            download_url, quality, imdb_rating)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+            download_url, quality, imdb_rating, description, backdrop_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           t.title,
           t.category,
@@ -334,7 +365,9 @@ export default {
           t.watch_url,
           t.download_url,
           t.quality,
-          t.imdb_rating
+          t.imdb_rating,
+          t.description ?? null,
+          t.backdrop_url ?? null
         ).run();
 
         return json({
@@ -378,7 +411,9 @@ export default {
             `UPDATE titles
              SET title = ?, category = ?, year = ?, poster_url = ?,
                  watch_url = ?, download_url = ?, quality = ?,
-                 imdb_rating = ?
+                 imdb_rating = ?,
+                 description = CASE WHEN ? = 1 THEN ? ELSE description END,
+                 backdrop_url = CASE WHEN ? = 1 THEN ? ELSE backdrop_url END
              WHERE id = ?`
           ).bind(
             t.title,
@@ -389,6 +424,10 @@ export default {
             t.download_url,
             t.quality,
             t.imdb_rating,
+            t.description !== undefined ? 1 : 0,
+            t.description ?? null,
+            t.backdrop_url !== undefined ? 1 : 0,
+            t.backdrop_url ?? null,
             id
           ).run();
 
