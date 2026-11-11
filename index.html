@@ -364,6 +364,10 @@ body::before,body::after{will-change:transform}
 .tax-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
 .tax-chip{display:inline-block;padding:5px 12px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(255,255,255,.07);color:#e6edf7;font-size:12px;font-weight:700;letter-spacing:.2px}
 .tax-chip.is-collection{border-color:rgba(232,189,104,.55);background:rgba(232,189,104,.13);color:var(--gold-light)}
+
+/* ===== DESCRIPTION ON TV SERIES AND ANIME PAGES ===== */
+.series-overview{max-width:780px;margin-top:24px}
+.series-overview .movie-desc-title{margin-top:0}
 </style>
 </head>
 
@@ -1180,6 +1184,27 @@ function makeBackButton() {
   };
 }
 
+// Description block for TV Series and Anime pages. It reads the same "description"
+// field and uses the same styles as the Movie page. Nothing is shown when it is empty.
+function makeOverview(t) {
+  const story = typeof t.description === "string" ? t.description.trim() : "";
+  if (!story) return null;
+
+  const block = document.createElement("div");
+  block.className = "detail-description series-overview";
+
+  const heading = document.createElement("h2");
+  heading.className = "movie-desc-title";
+  heading.textContent = "Overview";
+
+  const text = document.createElement("p");
+  text.className = "movie-desc";
+  text.textContent = story;
+
+  block.append(heading, text);
+  return block;
+}
+
 // Genre and custom-category tags. Returns nothing when none are chosen,
 // so titles without any choice show no empty section.
 function makeTaxonomyChips(t) {
@@ -1410,6 +1435,9 @@ async function openTitle(id) {
 
     layout.appendChild(description);
     detailContent.appendChild(layout);
+
+    const overview = makeOverview(t);
+    if (overview) detailContent.appendChild(overview);
 
     const seasonHeading = document.createElement("h2");
     seasonHeading.className = "section-heading";
@@ -1668,4 +1696,4 @@ if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/"))
 }
 </script>
 </body>
-</html>
+  </html>
