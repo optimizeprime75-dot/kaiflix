@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# The /api/ folder is NOT blocked on purpose: search engines need it to show the pages.
+
+Sitemap: https://kaiflix.bond/sitemap.xml
