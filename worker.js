@@ -450,6 +450,188 @@ async function readTitleTaxonomy(db, titleId) {
   };
 }
 
+/* ============================================================
+   SEARCH ENGINES: SITEMAP AND REAL TITLE PAGE ADDRESSES
+   - /sitemap.xml lists the homepage and every title as /title/ID
+   - /title/ID returns the normal app page, with the title name, description
+     and a canonical address added so search engines and link previews
+     can read it. The app then opens that title for the visitor.
+   ============================================================ */
+
+const SITE_URL = "https://kaiflix.bond";
+const SITEMAP_MAX_URLS = 50000; // the limit of one sitemap file
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function plainText(value) {
+  return String(value ?? "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function handleSitemap(request, env) {
+  let rows;
+
+  try {
+    const result = await env.DB.prepare(
+      `SELECT id, created_at FROM titles
+       ORDER BY id ASC
+       LIMIT ${SITEMAP_MAX_URLS - 1}`
+    ).all();
+
+    rows = result.results;
+  } catch (error) {
+    console.error("KaiFlix sitemap error:", error);
+
+    return new Response("Sitemap is temporarily unavailable", {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": "600",
+      },
+    });
+  }
+
+  // The homepage changes whenever a title is added, so its date is the newest title date.
+  let newest = "";
+
+  for (const row of rows) {
+    const day = typeof row.created_at === "string"
+      ? row.created_at.slice(0, 10)
+      : "";
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day > newest) newest = day;
+  }
+
+  const entries = [
+    `  <url>\n    <loc>${SITE_URL}/</loc>` +
+      (newest ? `\n    <lastmod>${newest}</lastmod>` : "") +
+      `\n  </url>`,
+  ];
+
+  for (const row of rows) {
+    const id = validPositiveInteger(row.id);
+    if (!id) continue;
+    entries.push(`  <url>\n    <loc>${SITE_URL}/title/${id}</loc>\n  </url>`);
+  }
+
+  const xml =
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `${entries.join("\n")}\n` +
+    `</urlset>\n`;
+
+  return new Response(request.method === "HEAD" ? null : xml, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
+
+function addHeadTags(html, pageTitle, tags) {
+  if (!/<\/head>/i.test(html)) return html;
+
+  return html
+    .replace(/<title>[\s\S]*?<\/title>/i, () => `<title>${escapeHtml(pageTitle)}</title>`)
+    .replace(/<meta\s+name=["']description["'][^>]*>\s*/i, "")
+    .replace(/<\/head>/i, () => `${tags}\n</head>`);
+}
+
+async function handleTitlePage(request, env, id) {
+  if (!env.ASSETS) return new Response("Not found", { status: 404 });
+
+  const shell = await env.ASSETS.fetch(new Request(`${SITE_URL}/`, { method: "GET" }));
+  if (!shell.ok) return shell;
+
+  let html = await shell.text();
+  let row = null;
+
+  if (id) {
+    try {
+      row = await env.DB.prepare(
+        `SELECT id, title, category, year, poster_url, description
+         FROM titles WHERE id = ?`
+      ).bind(id).first();
+    } catch (error) {
+      // Database trouble: still hand over the normal app page, without extra tags.
+      console.error("KaiFlix title page error:", error);
+
+      return new Response(request.method === "HEAD" ? null : html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+  }
+
+  if (!row) {
+    // A title that does not exist is a real 404 for search engines.
+    // The app page is still returned so visitors see its normal message.
+    html = addHeadTags(
+      html,
+      "Page not found | KaiFlix",
+      `<meta name="robots" content="noindex">`
+    );
+
+    return new Response(request.method === "HEAD" ? null : html, {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+
+  const name = plainText(row.title) || "KaiFlix";
+  const year = Number.isInteger(row.year) ? row.year : null;
+  const category = plainText(row.category);
+  const address = `${SITE_URL}/title/${row.id}`;
+
+  let summary = plainText(row.description);
+
+  if (summary.length > 155) summary = `${summary.slice(0, 154).trimEnd()}…`;
+
+  if (!summary) {
+    summary = `${name}${year ? ` (${year})` : ""} — ${category || "Title"} on KaiFlix.`;
+  }
+
+  const pageTitle = `${name}${year ? ` (${year})` : ""} | KaiFlix`;
+  const poster = validUrl(row.poster_url);
+
+  const tags = [
+    `<meta name="description" content="${escapeHtml(summary)}">`,
+    `<link rel="canonical" href="${address}">`,
+    `<meta property="og:site_name" content="KaiFlix">`,
+    `<meta property="og:type" content="${category === "Movie" ? "video.movie" : "video.tv_show"}">`,
+    `<meta property="og:title" content="${escapeHtml(pageTitle)}">`,
+    `<meta property="og:description" content="${escapeHtml(summary)}">`,
+    `<meta property="og:url" content="${address}">`,
+    poster ? `<meta property="og:image" content="${escapeHtml(poster)}">` : "",
+    `<meta name="twitter:card" content="summary">`,
+  ].filter(Boolean).join("\n");
+
+  html = addHeadTags(html, pageTitle, tags);
+
+  return new Response(request.method === "HEAD" ? null : html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=300",
+    },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -463,6 +645,17 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers });
+    }
+
+    // Sitemap and real title addresses (read only, nothing here changes any data).
+    if (request.method === "GET" || request.method === "HEAD") {
+      if (path === "/sitemap.xml") return handleSitemap(request, env);
+
+      const titlePage = path.match(/^\/title\/(\d+)\/?$/);
+
+      if (titlePage) {
+        return handleTitlePage(request, env, validPositiveInteger(titlePage[1]));
+      }
     }
 
     if (!path.startsWith("/api/")) {
