@@ -663,8 +663,39 @@ function isSeries(t) {
   return t.category !== "Movie";
 }
 
+const DEFAULT_PAGE_TITLE = "KaiFlix | Movies, Series & Anime";
+let lastRouteKey = location.pathname + location.search + location.hash;
+
+function pageTitleFor(t) {
+  return (t.title || "KaiFlix") + (t.year ? " (" + t.year + ")" : "") + " | KaiFlix";
+}
+
+// Moves to a new address (for example /title/5) and shows that page.
+// The address stays exactly as given, so it can be copied, shared and refreshed.
+function navigateTo(address) {
+  if (location.pathname + location.search + location.hash !== address) {
+    history.pushState(null, "", address);
+  }
+
+  route();
+  lastRouteKey = location.pathname + location.search + location.hash;
+}
+
+function goHome() {
+  navigateTo("/");
+}
+
+// Back and Forward buttons, and links that only change the part after #.
+// Some browsers send two events for one move, so each address is shown once.
+function routeFromLocation() {
+  if (location.pathname + location.search + location.hash === lastRouteKey) return;
+
+  route();
+  lastRouteKey = location.pathname + location.search + location.hash;
+}
+
 function openSeriesPage(t) {
-  location.hash = "title/" + encodeURIComponent(t.id);
+  navigateTo("/title/" + encodeURIComponent(t.id));
 }
 
 function setCategory(value) {
@@ -1148,6 +1179,7 @@ function setBreadcrumb(items) {
 
 function showCatalog() {
   routeToken++;
+  document.title = DEFAULT_PAGE_TITLE;
   setReportContext("", "");
   detail.style.display = "none";
   catalog.style.display = "";
@@ -1163,13 +1195,12 @@ function showDetailLoading(message) {
   detail.style.display = "block";
   detailContent.replaceChildren();
   detailStatus.textContent = message || "Loading...";
-  setBreadcrumb([{label:"Home",action:showCatalog}]);
+  setBreadcrumb([{label:"Home",action:goHome}]);
 }
 
 function makeBackButton() {
   document.getElementById("backBtn").onclick = () => {
-    location.hash = "catalog";
-    if (location.hash === "#catalog") showCatalog();
+    goHome();
   };
 }
 
@@ -1225,12 +1256,13 @@ function makeTaxonomyChips(t) {
 function renderMovieDetails(t) {
   window.scrollTo({top: 0, left: 0, behavior: "auto"});
   setReportContext(t.category, t.title);
+  document.title = pageTitleFor(t);
 
   setBreadcrumb([
-    {label:"Home",action:showCatalog},
+    {label:"Home",action:goHome},
     {label:t.category || "Movie",action:() => {
       setCategory(t.category || "All");
-      showCatalog();
+      goHome();
     }},
     {label:t.title || "Details"}
   ]);
@@ -1384,15 +1416,16 @@ async function openTitle(id) {
     detailStatus.textContent = "";
 
     setBreadcrumb([
-      {label:"Home",action:showCatalog},
+      {label:"Home",action:goHome},
       {label:t.category || "Catalog",action:() => {
         setCategory(t.category || "All");
-        showCatalog();
+        goHome();
       }},
       {label:t.title || "Details"}
     ]);
 
     setReportContext(t.category, t.title);
+    document.title = pageTitleFor(t);
 
     const layout = document.createElement("div");
     layout.className = "detail-layout";
@@ -1462,7 +1495,7 @@ async function openTitle(id) {
 
         btn.append(name, sub);
         btn.addEventListener("click", () => {
-          location.hash = "season/" + encodeURIComponent(season.id);
+          navigateTo("/#season/" + encodeURIComponent(season.id));
         });
 
         seasonList.appendChild(btn);
@@ -1508,9 +1541,9 @@ async function openSeason(id) {
     );
 
     setBreadcrumb([
-      {label:"Home",action:showCatalog},
+      {label:"Home",action:goHome},
       {label:title.title || "Series",action:() => {
-        location.hash = "title/" + encodeURIComponent(season.title_id);
+        navigateTo("/title/" + encodeURIComponent(season.title_id));
       }},
       {label:"Season " + (season.season_number ?? "?")}
     ]);
@@ -1523,6 +1556,7 @@ async function openSeason(id) {
     detailContent.appendChild(heading);
 
     setReportContext(title.category, (title.title || "Series") + " — Season " + (season.season_number ?? "?"));
+    document.title = (title.title || "Series") + " — Season " + (season.season_number ?? "?") + " | KaiFlix";
 
     const count = document.createElement("p");
     count.style.color = "var(--muted)";
@@ -1618,6 +1652,19 @@ function route() {
     return;
   }
 
+  // A real title address, such as /title/5, stays in the address bar and opens that title.
+  const titleAddress = location.pathname.match(/^\/title\/(\d+)\/?$/);
+
+  if (titleAddress) {
+    if (!location.hash) {
+      openTitle(titleAddress[1]);
+      return;
+    }
+
+    // A top-bar link such as Home, Movies, Series or Anime was used: go to the catalog.
+    history.replaceState(null, "", "/" + location.hash);
+  }
+
   showCatalog();
 }
 
@@ -1671,18 +1718,22 @@ search.addEventListener("input", () => {
 });
 
 document.getElementById("logo").addEventListener("click", () => {
-  location.hash = "catalog";
-  showCatalog();
+  goHome();
 });
 
-window.addEventListener("hashchange", route);
+window.addEventListener("hashchange", routeFromLocation);
+window.addEventListener("popstate", routeFromLocation);
 makeBackButton();
 showSkeleton();
 loadTitles();
 
-if (location.hash.startsWith("#title/") || location.hash.startsWith("#season/")) {
+if (
+  location.hash.startsWith("#title/") ||
+  location.hash.startsWith("#season/") ||
+  /^\/title\/\d+\/?$/.test(location.pathname)
+) {
   route();
 }
 </script>
 </body>
-  </html>
+</html>
