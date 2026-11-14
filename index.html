@@ -7,9 +7,8 @@
 <meta name="description" content="Discover Movies, TV Series and Anime on KaiFlix.">
 <title>KaiFlix | Movies, Series &amp; Anime</title>
 
-<!-- KaiFlix Popunder Advertisement -->
-<script data-cfasync="false" src="https://aarems.org/1/98eacea83206b1203528e5966cd6d95f"></script>
-<!-- End Popunder Advertisement -->
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 
 <style>
 :root{color-scheme:dark;--bg:#07111f;--panel:#0d1a2b;--line:#25374d;--gold:#e8bd68;--gold-light:#ffe3a0;--gold-dark:#b58a3e;--muted:#a6b5c9;--white:#f5f7fc}
@@ -93,8 +92,6 @@ h2{margin:0;font-size:clamp(22px,3vw,28px);letter-spacing:-.5px}
 .filters button{padding:10px 15px;border:1px solid #293a50;border-radius:8px;background:#0c1929;color:#bac7d8;cursor:pointer;font-size:12px;font-weight:800;transition:background .25s,border-color .25s,color .25s,transform .25s,box-shadow .25s}
 .filters button:hover{border-color:var(--gold-dark);color:var(--gold-light);transform:translateY(-2px)}
 .filters button.active{color:#17130b;background:linear-gradient(110deg,var(--gold-dark),var(--gold-light));border-color:var(--gold);box-shadow:0 4px 17px rgba(181,138,62,.12)}
-.ad-slot{width:100%;max-width:100%;margin:22px auto 8px;text-align:center;overflow:hidden}
-.ad-label{margin:0 0 10px;color:#8290a4;font-size:9px;letter-spacing:1.8px;text-transform:uppercase}
 #status{color:var(--muted);font-size:13px;line-height:1.6}
 #empty{padding:22px 0;color:var(--muted)}
 
@@ -421,14 +418,6 @@ body::before,body::after{will-change:transform}
       <button type="button" data-cat="TV Series">TV Series</button>
       <button type="button" data-cat="Anime">Anime</button>
     </div>
-
-    <!-- Existing Adsterra Native Banner. Keep this code only once. -->
-    <div class="ad-slot" aria-label="Advertisement">
-      <p class="ad-label">Advertisement</p>
-      <script async="async" data-cfasync="false" src="https://bancadeltempoidea.org/21/31a9cb316c484308f95d99ad4fd50de3"></script>
-      <div id="container-31a9cb316c484308f95d99ad4fd50de3"></div>
-    </div>
-    <!-- End Adsterra Native Banner -->
 
     <p id="status" role="status">Loading catalog...</p>
     <div id="rows"></div>
