@@ -186,6 +186,10 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* ---- Section views: one page per section (mobile feedback) ---- */
+[data-view].view-hidden{display:none!important;}
+.topnav a.active{background:rgba(232,189,104,.14);color:var(--gold-light)}
 </style>
 </head>
 <body>
@@ -217,11 +221,11 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 </header>
 
 <div class="container">
-<div class="page-head">
+<div class="page-head" data-view="home">
 <h1>🎬 KaiFlix Admin Panel</h1>
 <p class="hint">Manage movies, ratings, quality, TV series, anime, seasons and episodes.</p>
 </div>
-<section class="panel" id="dashboardPanel">
+<section class="panel" id="dashboardPanel" data-view="home">
 <h2>✦ Dashboard</h2>
 <p class="hint">Live overview of your KaiFlix catalog. Numbers come from the real catalog data.</p>
 <div class="stat-grid">
@@ -249,14 +253,14 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 </div>
 </section>
 
-<section class="panel" id="loginPanel">
+<section class="panel" id="loginPanel" data-view="home">
 <h2>🔐 Admin Login</h2>
 <label for="password">Admin Password</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Enter admin password">
 <p class="hint">Password is used for protected requests and is not stored by this page.</p>
 </section>
 
-<section class="panel" id="addPanel">
+<section class="panel" id="addPanel" data-view="home">
 <h2>➕ Add New Title</h2>
 <form id="addForm">
 <label for="title">Title *</label>
@@ -322,7 +326,7 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 </form>
 </section>
 
-<section class="panel" id="catalogPanel">
+<section class="panel" id="catalogPanel" data-view="catalog">
 <h2>📚 Manage Catalog</h2>
 <label for="search">🔎 Search titles</label>
 <input id="search" type="search" placeholder="Search title, category, year or rating">
@@ -331,7 +335,7 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <div id="titleList"></div>
 </section>
 
-<section class="panel" id="editPanel" hidden>
+<section class="panel" id="editPanel" data-view="catalog" hidden>
 <h2>✏️ Edit Title</h2>
 <p id="editId" class="hint"></p>
 <form id="editForm">
@@ -395,7 +399,7 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 </form>
 </section>
 
-<section class="panel" id="seriesPanel" hidden>
+<section class="panel" id="seriesPanel" data-view="catalog" hidden>
 <h2>📺 Manage Seasons & Episodes</h2>
 <p id="seriesHeading" class="hint"></p>
 
@@ -413,7 +417,7 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <div id="seriesMessage" class="message" role="status"></div>
 </section>
 
-<section class="panel" id="episodePanel" hidden>
+<section class="panel" id="episodePanel" data-view="catalog" hidden>
 <h2>🎞️ Manage Episodes</h2>
 <p id="episodeHeading" class="hint"></p>
 
@@ -443,11 +447,11 @@ div.thumb{display:flex;align-items:center;justify-content:center;font-size:24px}
 <div id="episodeList"></div>
 </section>
 
-<section class="panel" id="genresPanel"></section>
+<section class="panel" id="genresPanel" data-view="genres"></section>
 
-<section class="panel" id="categoriesPanel"></section>
+<section class="panel" id="categoriesPanel" data-view="categories"></section>
 
-<section class="panel" id="reportsPanel">
+<section class="panel" id="reportsPanel" data-view="reports">
 <h2>🚩 Visitor Reports</h2>
 <p class="hint">Problems reported by visitors. Reports can only be loaded with the Admin Password entered above.</p>
 
@@ -1597,11 +1601,17 @@ loadTitles();
 <script>
 /* ===== KaiFlix Admin — Liquid Glass additions (ADDITIVE ONLY) =====
    This block only ADDS behaviour: mobile drawer, dashboard stats from the
-   real catalog data, and sidebar active states. It never edits, wraps or
-   replaces any function, id or endpoint from the original script above.
-   Dashboard numbers come from GET /titles (already loaded by loadTitles)
-   plus public GET /titles/:id/seasons and /seasons/:id/episodes for the
-   episode total. No mutations, no password use, no hardcoded numbers. */
+   real catalog data, sidebar active states, and section views (one page
+   per section: home / catalog / genres / categories / reports). It never
+   edits, wraps or replaces any function, id or endpoint from the original
+   script above. Dashboard numbers come from GET /titles (already loaded
+   by loadTitles) plus public GET /titles/:id/seasons and
+   /seasons/:id/episodes for the episode total. No mutations, no password
+   use, no hardcoded numbers.
+   Views work by toggling a .view-hidden class on [data-view] elements
+   only. They never touch the `hidden` attribute the original JS uses for
+   editPanel/seriesPanel/episodePanel, so the original sub-flows keep
+   working unchanged inside the catalog view. */
 (function(){
   "use strict";
 
@@ -1613,12 +1623,67 @@ loadTitles();
     document.body.classList.toggle("drawer-open");
   });
   if(backdrop)backdrop.addEventListener("click",closeDrawer);
-  document.querySelectorAll(".side-nav a").forEach(function(a){
-    a.addEventListener("click",function(){
-      document.querySelectorAll(".side-nav a").forEach(function(x){x.classList.remove("active");});
-      a.classList.add("active");
-      closeDrawer();
+  /* ---- Section views: one page per section ----
+     View map (groups of panels). edit/series/episode panels are catalog
+     sub-flows: the original JS shows/hides them with the `hidden`
+     attribute and scrolls to them; this switcher only adds/removes the
+     .view-hidden class, so it never fights the original JS and never
+     clears catalog state when switching away and back. */
+  var PANEL_VIEW={
+    dashboardPanel:"home",loginPanel:"home",addPanel:"home",
+    catalogPanel:"catalog",editPanel:"catalog",seriesPanel:"catalog",episodePanel:"catalog",
+    genresPanel:"genres",categoriesPanel:"categories",reportsPanel:"reports"
+  };
+  var VIEW_HASH={home:"dashboardPanel",catalog:"catalogPanel",genres:"genresPanel",categories:"categoriesPanel",reports:"reportsPanel"};
+  var currentView="home";
+  function setActiveNav(view){
+    document.querySelectorAll(".side-nav a,.topnav a").forEach(function(x){
+      var id=(x.getAttribute("href")||"").replace("#","");
+      x.classList.toggle("active",PANEL_VIEW[id]===view&&VIEW_HASH[view]===id);
     });
+  }
+  function showView(view,opts){
+    opts=opts||{};
+    if(!VIEW_HASH[view])view="home";
+    currentView=view;
+    document.querySelectorAll("[data-view]").forEach(function(el){
+      el.classList.toggle("view-hidden",el.getAttribute("data-view")!==view);
+    });
+    setActiveNav(view);
+    if(!opts.keepHash){
+      try{history.replaceState(null,"","#"+VIEW_HASH[view]);}catch(e){}
+    }
+    if(opts.scroll!==false)window.scrollTo(0,0);
+    closeDrawer();
+  }
+  /* One delegated handler covers sidebar links, topnav links and the
+     dashboard Quick Action links — all are plain #panel anchors. */
+  document.addEventListener("click",function(e){
+    var a=e.target&&e.target.closest?e.target.closest('a[href^="#"]'):null;
+    if(!a)return;
+    var id=a.getAttribute("href").slice(1);
+    if(!PANEL_VIEW[id])return;
+    e.preventDefault();
+    showView(PANEL_VIEW[id]);
+  });
+  /* Deep link: a hash naming a panel opens its view on load. */
+  (function initView(){
+    var h=(location.hash||"").replace("#","");
+    var view=PANEL_VIEW[h]||"home";
+    showView(view,{scroll:false,keepHash:true});
+    if(PANEL_VIEW[h]){
+      setTimeout(function(){
+        var el=document.getElementById(h);
+        if(el)el.scrollIntoView();
+      },0);
+    }
+  })();
+  /* Same-page hash change (e.g. a pasted #genresPanel link while the
+     panel is already open): follow it. replaceState above never fires
+     this, so no loop is possible. */
+  window.addEventListener("hashchange",function(){
+    var h=(location.hash||"").replace("#","");
+    if(PANEL_VIEW[h])showView(PANEL_VIEW[h],{keepHash:true});
   });
   document.addEventListener("keydown",function(e){
     if(e.key==="Escape")closeDrawer();
